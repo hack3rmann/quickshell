@@ -10,11 +10,24 @@ Item {
     readonly property real barWidth: 2.5 * Theme.uiScale
     readonly property real barGap: 1.5 * Theme.uiScale
 
-    implicitWidth: row.implicitWidth + Theme.modulePadH
+    // Collapse completely when silent so the center cluster reflows.
+    implicitWidth: shown ? row.implicitWidth + Theme.modulePadH : 0
     implicitHeight: Theme.barHeight
+    opacity: shown ? 1 : 0
+    clip: true
+    visible: implicitWidth > 0
 
+    property bool shown: false
     // 0–7 levels from cava (via WaybarCava ▁▂▃▄▅▆▇█ mapping).
     property var levels: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+    function levelsSilent(lv) {
+        for (let i = 0; i < lv.length; i++) {
+            if (lv[i] > 0)
+                return false;
+        }
+        return true;
+    }
 
     Process {
         id: cavaProc
@@ -30,13 +43,26 @@ Item {
                     if (idx >= 0)
                         next.push(idx);
                 }
-                if (next.length === root.barCount)
-                    root.levels = next;
+                if (next.length !== root.barCount)
+                    return;
+                root.levels = next;
+                if (!root.levelsSilent(next)) {
+                    hideTimer.stop();
+                    root.shown = true;
+                } else if (root.shown) {
+                    hideTimer.restart();
+                }
             }
         }
     }
 
-    // Vector rects updated in place — no Image/SVG reload flicker.
+    // Grace period so brief silence doesn't flicker the module away.
+    Timer {
+        id: hideTimer
+        interval: 1200
+        onTriggered: root.shown = false
+    }
+
     Row {
         id: row
         anchors.centerIn: parent
