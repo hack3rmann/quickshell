@@ -79,6 +79,11 @@ Item {
 
     function cycleLayout() {
         Quickshell.execDetached(["niri", "msg", "action", "switch-layout", "next"]);
+        // Event stream updates keyboardIndex via KeyboardLayoutSwitched.
+    }
+
+    function refreshLayouts() {
+        layoutProbe.running = true;
     }
 
     function refreshWorkspaces() {
@@ -109,8 +114,11 @@ Item {
             if (ev.KeyboardLayoutsChanged && ev.KeyboardLayoutsChanged.keyboard_layouts) {
                 const kb = ev.KeyboardLayoutsChanged.keyboard_layouts;
                 root.keyboardNames = kb.names || [];
-                root.keyboardIndex = kb.current_idx || 0;
+                root.keyboardIndex = kb.current_idx ?? 0;
             }
+            // Click / hotkey switch emits this (not a full KeyboardLayoutsChanged).
+            if (ev.KeyboardLayoutSwitched && ev.KeyboardLayoutSwitched.idx !== undefined)
+                root.keyboardIndex = ev.KeyboardLayoutSwitched.idx;
         } catch (e) {}
     }
 
@@ -162,8 +170,25 @@ Item {
         }
     }
 
+    Process {
+        id: layoutProbe
+        command: ["niri", "msg", "-j", "keyboard-layouts"]
+        running: false
+        stdout: StdioCollector {
+            waitForEnd: true
+            onStreamFinished: {
+                try {
+                    const kb = JSON.parse(text);
+                    root.keyboardNames = kb.names || [];
+                    root.keyboardIndex = kb.current_idx ?? 0;
+                } catch (e) {}
+            }
+        }
+    }
+
     Component.onCompleted: {
         wsProbe.running = true;
         winProbe.running = true;
+        layoutProbe.running = true;
     }
 }
