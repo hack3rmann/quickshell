@@ -82,15 +82,19 @@ PanelWindow {
 
     Timer {
         id: appsReadyRetry
+        property int attempts: 0
         interval: 150
         repeat: true
+        onRunningChanged: if (running)
+            attempts = 0
         onTriggered: {
             if (!root.opened) {
                 stop();
                 return;
             }
+            attempts += 1;
             root.refreshResults();
-            if (root.results.length > 0 || DesktopEntries.applications.values.length > 0)
+            if (root.results.length > 0 || DesktopEntries.applications.values.length > 0 || attempts >= 40)
                 stop();
         }
     }
