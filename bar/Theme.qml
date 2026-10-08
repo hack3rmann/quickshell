@@ -3,10 +3,13 @@ import QtQuick
 
 QtObject {
     readonly property real uiScale: 1.8
-    readonly property real fontFactor: 0.98
+    // Match Waybar Crystal Clear `font-size: 99%` for even ▁/underscore advances.
+    readonly property real fontFactor: 0.99
 
     readonly property string fontFamily: "JetBrains Mono Nerd Font"
     readonly property real fontSize: 12 * uiScale * fontFactor
+    // QFont.pixelSize is int-only; pointSize accepts fractions (px→pt at 96dpi).
+    readonly property real fontPointSize: fontSize * 72 / 96
     // Hug the glyph cell — no extra vertical padding that reads as top/bottom margins.
     readonly property real barHeight: Math.ceil(12 * uiScale)
     // Optical balance below the screen edge / above content.

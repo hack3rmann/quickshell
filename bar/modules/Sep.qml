@@ -6,10 +6,11 @@ Text {
     text: mark
     color: Theme.text
     font.family: Theme.fontFamily
-    font.pixelSize: Math.ceil(Theme.fontSize)
-    scale: Theme.fontSize / Math.ceil(Theme.fontSize)
-    transformOrigin: Item.Center
+    font.pointSize: Theme.fontPointSize
+    font.hintingPreference: Font.PreferNoHinting
+    font.kerning: false
     font.bold: true
+    renderType: Text.QtRendering
     verticalAlignment: Text.AlignVCenter
     leftPadding: Theme.sepPadH
     rightPadding: Theme.sepPadH
