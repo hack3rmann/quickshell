@@ -145,8 +145,12 @@ Item {
                             id: trayMenu
                             menu: trayItem.modelData.menu
                             anchorItem: trayItem
-                            onMenuOpened: root.menuOpen++
-                            onMenuClosed: root.menuOpen = Math.max(0, root.menuOpen - 1)
+                            onIsOpenChanged: {
+                                if (isOpen)
+                                    root.menuOpen++;
+                                else
+                                    root.menuOpen = Math.max(0, root.menuOpen - 1);
+                            }
                         }
                     }
                 }

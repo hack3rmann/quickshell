@@ -7,9 +7,7 @@ PopupWindow {
 
     property var menu: null
     property var anchorItem: null
-
-    signal menuOpened
-    signal menuClosed
+    property bool isOpen: false
 
     color: "transparent"
     visible: false
@@ -33,19 +31,13 @@ PopupWindow {
         root.visible = false;
     }
 
-    onVisibleChanged: {
-        if (visible)
-            root.menuOpened();
-        else
-            root.menuClosed();
-    }
+    onVisibleChanged: root.isOpen = visible
 
     Rectangle {
         id: frame
         implicitWidth: list.menuWidth + Theme.menuPad * 2
         implicitHeight: Math.max(list.implicitHeight, Theme.menuRowHeight) + Theme.menuPad * 2
-        width: implicitWidth
-        height: implicitHeight
+        anchors.fill: parent
         radius: Theme.radius
         color: Theme.panelBg
         border.width: Theme.borderWidth
