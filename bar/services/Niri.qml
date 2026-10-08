@@ -78,11 +78,18 @@ Item {
     }
 
     function cycleLayout() {
-        Quickshell.execDetached(["niri", "msg", "action", "switch-layout", "next"]);
-        // Event stream updates keyboardIndex via KeyboardLayoutSwitched.
+        // Prefer explicit index — more reliable than "next" through some IPC paths.
+        const count = Math.max(1, (root.keyboardNames || []).length);
+        const next = (root.keyboardIndex + 1) % count;
+        layoutSwitchProc.command = ["niri", "msg", "action", "switch-layout", String(next)];
+        if (layoutSwitchProc.running)
+            layoutSwitchProc.running = false;
+        layoutSwitchProc.running = true;
     }
 
     function refreshLayouts() {
+        if (layoutProbe.running)
+            layoutProbe.running = false;
         layoutProbe.running = true;
     }
 
@@ -166,6 +173,22 @@ Item {
                     root.focusedTitle = "";
                     root.focusedAppId = "";
                 }
+            }
+        }
+    }
+
+    Process {
+        id: layoutSwitchProc
+        running: false
+        stdout: StdioCollector {
+            waitForEnd: true
+            onStreamFinished: root.refreshLayouts()
+        }
+        stderr: StdioCollector {
+            waitForEnd: true
+            onStreamFinished: {
+                if (text && text.trim())
+                    console.warn("switch-layout failed:", text.trim());
             }
         }
     }

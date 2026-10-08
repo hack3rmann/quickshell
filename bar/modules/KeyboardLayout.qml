@@ -3,10 +3,11 @@ import qs.bar
 
 MouseArea {
     id: root
-    implicitWidth: label.implicitWidth + Theme.modulePadH * 2
+    implicitWidth: Math.max(label.implicitWidth + Theme.modulePadH * 2, Theme.barHeight)
     implicitHeight: Theme.barHeight
     cursorShape: Qt.PointingHandCursor
     hoverEnabled: true
+    acceptedButtons: Qt.LeftButton
     onClicked: Niri.cycleLayout()
 
     Behavior on implicitWidth {
