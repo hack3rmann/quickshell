@@ -23,6 +23,7 @@ PopupWindow {
     anchor.edges: Edges.Bottom | Edges.Left
     anchor.gravity: Edges.Bottom | Edges.Right
     anchor.adjustment: PopupAdjustment.All
+    anchor.margins.bottom: -Theme.popupGap
 
     implicitWidth: frame.implicitWidth
     implicitHeight: frame.implicitHeight
@@ -130,12 +131,13 @@ PopupWindow {
             x: Theme.menuPad
             y: Theme.menuPad
             width: root.panelWidth - Theme.menuPad * 2
-            spacing: Theme.spacing
+            spacing: Theme.menuPad * 1.5
 
             // Header
             RowLayout {
                 width: parent.width
-                spacing: Theme.menuIconGap
+                height: Theme.menuRowHeight
+                spacing: Theme.menuPad * 1.25
 
                 Text {
                     text: "Bluetooth"
@@ -144,19 +146,31 @@ PopupWindow {
                     font.pointSize: Theme.menuFontPointSize
                     font.bold: true
                     Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignVCenter
+                    Layout.leftMargin: Theme.menuPad
+                    elide: Text.ElideRight
                 }
 
                 // Power
                 MouseArea {
                     id: powerBtn
-                    Layout.preferredWidth: powerLabel.implicitWidth + Theme.modulePadH
+                    Layout.preferredWidth: powerLabel.implicitWidth + Theme.menuPad * 2.5
                     Layout.preferredHeight: Theme.menuRowHeight
+                    Layout.alignment: Qt.AlignVCenter
                     cursorShape: Qt.PointingHandCursor
                     hoverEnabled: true
                     enabled: !!root.adapter
                     onClicked: {
                         if (root.adapter)
                             root.adapter.enabled = !root.adapter.enabled;
+                    }
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: Math.max(4, Theme.radius - 4)
+                        color: powerBtn.containsMouse ? Theme.selectBg : "transparent"
+                        border.width: powerBtn.containsMouse ? Math.max(1, Math.round(Theme.borderWidth * 0.75)) : 0
+                        border.color: Theme.panelBorder
                     }
 
                     Text {
@@ -173,14 +187,24 @@ PopupWindow {
                 // Scan
                 MouseArea {
                     id: scanBtn
-                    Layout.preferredWidth: scanLabel.implicitWidth + Theme.modulePadH
+                    Layout.preferredWidth: scanLabel.implicitWidth + Theme.menuPad * 2.5
                     Layout.preferredHeight: Theme.menuRowHeight
+                    Layout.alignment: Qt.AlignVCenter
                     cursorShape: Qt.PointingHandCursor
                     hoverEnabled: true
                     enabled: !!(root.adapter && root.adapter.enabled)
                     onClicked: {
                         if (root.adapter)
                             root.adapter.discovering = !root.adapter.discovering;
+                    }
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: Math.max(4, Theme.radius - 4)
+                        color: scanBtn.containsMouse || (root.adapter && root.adapter.discovering) ? Theme.selectBg : "transparent"
+                        border.width: scanBtn.containsMouse ? Math.max(1, Math.round(Theme.borderWidth * 0.75)) : 0
+                        border.color: Theme.panelBorder
+                        opacity: scanBtn.enabled ? 1 : 0.45
                     }
 
                     Text {
@@ -205,7 +229,7 @@ PopupWindow {
             Flickable {
                 id: flick
                 width: parent.width
-                height: Math.min(deviceCol.implicitHeight, root.listMaxHeight)
+                height: Math.min(Math.max(deviceCol.implicitHeight, Theme.menuRowHeight), root.listMaxHeight)
                 contentHeight: deviceCol.implicitHeight
                 clip: true
                 boundsBehavior: Flickable.StopAtBounds
@@ -214,32 +238,32 @@ PopupWindow {
                 Column {
                     id: deviceCol
                     width: flick.width
-                    spacing: 2
+                    spacing: Theme.menuPad
 
                     Text {
                         visible: !root.adapter || !root.adapter.enabled
                         width: parent.width
+                        height: visible ? implicitHeight + Theme.menuPad : 0
                         text: "Adapter is off"
                         color: Theme.muted
                         font.family: Theme.fontFamily
                         font.pointSize: Theme.menuFontPointSize
                         font.bold: true
                         leftPadding: Theme.menuPad / 2
-                        topPadding: Theme.spacing
-                        bottomPadding: Theme.spacing
+                        verticalAlignment: Text.AlignVCenter
                     }
 
                     Text {
                         visible: !!(root.adapter && root.adapter.enabled && root.sortedDevices.length === 0)
                         width: parent.width
+                        height: visible ? implicitHeight + Theme.menuPad : 0
                         text: root.adapter && root.adapter.discovering ? "Scanning…" : "No devices"
                         color: Theme.muted
                         font.family: Theme.fontFamily
                         font.pointSize: Theme.menuFontPointSize
                         font.bold: true
                         leftPadding: Theme.menuPad / 2
-                        topPadding: Theme.spacing
-                        bottomPadding: Theme.spacing
+                        verticalAlignment: Text.AlignVCenter
                     }
 
                     Repeater {
@@ -249,7 +273,7 @@ PopupWindow {
                             id: row
                             required property var modelData
                             width: deviceCol.width
-                            height: Theme.menuRowHeight
+                            height: Theme.menuRowHeight * 1.75
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             acceptedButtons: Qt.LeftButton | Qt.RightButton
@@ -276,19 +300,24 @@ PopupWindow {
                                 anchors.fill: parent
                                 anchors.leftMargin: Theme.menuPad
                                 anchors.rightMargin: Theme.menuPad
+                                anchors.topMargin: Theme.menuPad / 3
+                                anchors.bottomMargin: Theme.menuPad / 3
                                 spacing: Theme.menuIconGap
 
                                 ResolvedIcon {
-                                    Layout.preferredWidth: Theme.menuRowHeight * 0.65
-                                    Layout.preferredHeight: Theme.menuRowHeight * 0.65
-                                    implicitSize: Theme.menuRowHeight * 0.65
-                                    candidates: Theme.iconCandidates(modelData.icon || "bluetooth-symbolic")
-                                    forceMono: true
+                                    Layout.preferredWidth: Theme.menuRowHeight * 0.7
+                                    Layout.preferredHeight: Theme.menuRowHeight * 0.7
+                                    Layout.alignment: Qt.AlignVCenter
+                                    implicitSize: Theme.menuRowHeight * 0.7
+                                    // Prefer symbolic via Theme.iconCandidates; auto-recolor those only.
+                                    // forceMono turns full-color BlueZ icons (breeze audio-headset) into white squares.
+                                    candidates: Theme.iconCandidates(modelData.icon || "bluetooth")
                                 }
 
                                 Column {
                                     Layout.fillWidth: true
-                                    spacing: 0
+                                    Layout.alignment: Qt.AlignVCenter
+                                    spacing: 2
 
                                     Text {
                                         width: parent.width
@@ -319,6 +348,7 @@ PopupWindow {
 
                                 Text {
                                     visible: modelData.connected || modelData.state === BluetoothDeviceState.Connecting
+                                    Layout.alignment: Qt.AlignVCenter
                                     text: modelData.connected ? "󰂱" : "…"
                                     color: Theme.text
                                     font.family: Theme.fontFamily
@@ -331,16 +361,6 @@ PopupWindow {
                 }
             }
 
-            Text {
-                visible: !!(root.adapter && root.adapter.enabled)
-                width: parent.width
-                text: "Right-click a paired device to forget"
-                color: Theme.muted
-                font.family: Theme.fontFamily
-                font.pointSize: Theme.menuFontPointSize * 0.8
-                font.bold: true
-                opacity: 0.7
-            }
         }
     }
 }

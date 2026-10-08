@@ -1,11 +1,14 @@
 import QtQuick
 import Quickshell.Networking
 import qs.bar
+import qs.bar.modules
 
 Item {
     id: root
     implicitWidth: label.implicitWidth + Theme.modulePadH * 2
     implicitHeight: Theme.barHeight
+
+    readonly property bool menuOpen: popup.isOpen
 
     HoverHandler {
         id: hover
@@ -51,7 +54,7 @@ Item {
     BarText {
         id: label
         anchors.centerIn: parent
-        scale: hover.hovered ? Theme.hoverScale : 1.0
+        scale: (hover.hovered || root.menuOpen) ? Theme.hoverScale : 1.0
         text: {
             if (root.wiredDevice)
                 return "󰌘";
@@ -69,5 +72,23 @@ Item {
             return "󰤟";
         }
         color: (root.wiredDevice || (root.wifiDevice && root.wifiDevice.connected)) ? Theme.text : Theme.muted
+    }
+
+    MouseArea {
+        id: hit
+        anchors.fill: parent
+        hoverEnabled: true
+        cursorShape: Qt.PointingHandCursor
+        onClicked: {
+            if (popup.visible)
+                popup.close();
+            else
+                popup.open();
+        }
+    }
+
+    NetworkPopup {
+        id: popup
+        anchorItem: hit
     }
 }

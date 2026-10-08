@@ -35,22 +35,42 @@ QtObject {
             return [s];
         }
 
-        const names = [name];
-        if (name.endsWith("-symbolic"))
+        // Prefer *-symbolic so crystal panels can recolor dark glyphs cleanly.
+        // BlueZ device icons are often non-symbolic names (audio-headset, phone, …).
+        const names = [];
+        if (name.endsWith("-symbolic")) {
+            names.push(name);
             names.push(name.slice(0, -9));
+        } else {
+            names.push(name + "-symbolic");
+            names.push(name);
+        }
 
-        // Blueman menus use GNOME *-symbolic names; map to hicolor PNGs Waybar shows.
+        // Blueman menus / BlueZ class icons → theme names that actually exist.
         const aliases = {
             "bluetooth": "blueman",
             "bluetooth-disabled": "blueman-disabled",
             "bluetooth-disconnected": "blueman",
             "bluetooth-active": "blueman-active",
             "blueman-send": "blueman",
+            "audio-headset": "audio-headphones",
+            "audio-card": "audio-speakers",
+            "computer": "computer",
+            "phone": "phone",
+            "smartphone": "phone",
+            "input-gaming": "input-gaming",
+            "input-keyboard": "input-keyboard",
+            "input-mouse": "input-mouse",
         };
         const n0 = names.length;
         for (let i = 0; i < n0; i++) {
-            if (aliases[names[i]])
-                names.push(aliases[names[i]]);
+            const base = names[i].endsWith("-symbolic") ? names[i].slice(0, -9) : names[i];
+            const mapped = aliases[base];
+            if (!mapped || mapped === base)
+                continue;
+            if (names[i].endsWith("-symbolic"))
+                names.push(mapped + "-symbolic");
+            names.push(mapped);
         }
 
         const out = [];
@@ -72,6 +92,8 @@ QtObject {
             "Adwaita/symbolic/apps",
             "Adwaita/symbolic/places",
             "Adwaita/symbolic/emblems",
+            "Adwaita/scalable/devices",
+            "Adwaita/16x16/devices",
             "hicolor/scalable/actions",
             "hicolor/scalable/status",
             "hicolor/scalable/apps",
@@ -148,6 +170,8 @@ QtObject {
     readonly property real menuIconGap: Math.round(10 * uiScale / 1.5)
     readonly property real menuRowHeight: Math.round(28 * uiScale / 1.5)
     readonly property real menuFontPointSize: fontPointSize
+    // Gap below the bar anchor before popups (negative bottom margin expands the rect).
+    readonly property int popupGap: Math.round(6 * uiScale / 1.5)
 
     // Motion
     readonly property int animFast: 140

@@ -18,6 +18,7 @@ PopupWindow {
     anchor.edges: Edges.Bottom | Edges.Left
     anchor.gravity: Edges.Bottom | Edges.Right
     anchor.adjustment: PopupAdjustment.All
+    anchor.margins.bottom: -Theme.popupGap
 
     implicitWidth: frame.implicitWidth
     implicitHeight: frame.implicitHeight

@@ -1,7 +1,7 @@
 import QtQuick
-import Quickshell
 import Quickshell.Bluetooth
 import qs.bar
+import qs.bar.modules
 
 Item {
     id: root
@@ -52,12 +52,7 @@ Item {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
-        onClicked: event => {
-            if (event.button === Qt.RightButton) {
-                Quickshell.execDetached(["blueman-manager"]);
-                return;
-            }
+        onClicked: {
             if (popup.visible)
                 popup.close();
             else
