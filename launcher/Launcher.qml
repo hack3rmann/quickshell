@@ -91,6 +91,18 @@ PanelWindow {
         listView.positionViewAtIndex(selectedIndex, ListView.Contain);
     }
 
+    readonly property string defaultAppIcon: Quickshell.iconPath("application-x-executable")
+
+    function appIconSource(app) {
+        if (!app)
+            return root.defaultAppIcon;
+        const icon = app.icon || "";
+        if (!icon)
+            return root.defaultAppIcon;
+        const path = Quickshell.iconPath(icon, true);
+        return path || root.defaultAppIcon;
+    }
+
     IpcHandler {
         target: "launcher"
 
@@ -254,14 +266,15 @@ PanelWindow {
                         spacing: root.theme.padding
 
                         IconImage {
+                            id: appIcon
                             visible: row.modelData.type === "app"
                             Layout.preferredWidth: root.theme.iconSize
                             Layout.preferredHeight: root.theme.iconSize
                             implicitSize: root.theme.iconSize
-                            source: {
-                                if (row.modelData.type !== "app" || !row.modelData.app)
-                                    return "";
-                                return Quickshell.iconPath(row.modelData.app.icon, "application-x-executable");
+                            source: row.modelData.type === "app" ? root.appIconSource(row.modelData.app) : ""
+                            onStatusChanged: {
+                                if (status === Image.Error && source !== root.defaultAppIcon)
+                                    source = root.defaultAppIcon;
                             }
                         }
 
@@ -270,7 +283,10 @@ PanelWindow {
                             Layout.preferredWidth: root.theme.iconSize
                             Layout.preferredHeight: root.theme.iconSize
                             implicitSize: root.theme.iconSize
-                            source: Quickshell.iconPath("accessories-calculator", "application-x-executable")
+                            source: {
+                                const calc = Quickshell.iconPath("accessories-calculator", true);
+                                return calc || root.defaultAppIcon;
+                            }
                         }
 
                         ColumnLayout {
