@@ -4,7 +4,7 @@ import qs.bar
 
 RowLayout {
     id: root
-    spacing: 2
+    spacing: 2 * Theme.uiScale
     required property string outputName
 
     readonly property var roman: ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"]
@@ -16,7 +16,7 @@ RowLayout {
         MouseArea {
             id: ws
             required property var modelData
-            Layout.preferredWidth: label.implicitWidth + 10
+            Layout.preferredWidth: label.implicitWidth + 10 * Theme.uiScale
             Layout.preferredHeight: Theme.barHeight
             cursorShape: Qt.PointingHandCursor
             onClicked: Niri.focusWorkspace(modelData)

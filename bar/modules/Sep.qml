@@ -4,11 +4,13 @@ import qs.bar
 Text {
     required property string mark
     text: mark
-    color: Theme.muted
+    color: Theme.text
     font.family: Theme.fontFamily
-    font.pixelSize: Theme.fontSize
+    font.pixelSize: Math.ceil(Theme.fontSize)
+    scale: Theme.fontSize / Math.ceil(Theme.fontSize)
+    transformOrigin: Item.Center
     font.bold: true
     verticalAlignment: Text.AlignVCenter
-    leftPadding: 2
-    rightPadding: 2
+    leftPadding: 2 * Theme.uiScale
+    rightPadding: 2 * Theme.uiScale
 }

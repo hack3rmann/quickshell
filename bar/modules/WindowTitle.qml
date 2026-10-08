@@ -3,7 +3,7 @@ import qs.bar
 
 Item {
     id: root
-    implicitWidth: Math.min(280, label.implicitWidth + Theme.modulePadH * 2)
+    implicitWidth: Math.min(Theme.titleMaxWidth, label.implicitWidth + Theme.modulePadH * 2)
     implicitHeight: Theme.barHeight
     clip: true
 

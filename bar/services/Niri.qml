@@ -24,6 +24,23 @@ Item {
         return name.split(" ")[0].toLowerCase().slice(0, 2);
     }
 
+    function applyFocusedFromWindows(windows) {
+        if (!windows || !windows.length) {
+            root.focusedTitle = "";
+            root.focusedAppId = "";
+            return;
+        }
+        for (let i = 0; i < windows.length; i++) {
+            if (windows[i].is_focused) {
+                root.focusedTitle = windows[i].title || "";
+                root.focusedAppId = windows[i].app_id || "";
+                return;
+            }
+        }
+        root.focusedTitle = "";
+        root.focusedAppId = "";
+    }
+
     function workspacesForOutput(outputName) {
         const all = root.workspaces || [];
         const filtered = [];
@@ -35,7 +52,6 @@ Item {
             return a.idx - b.idx;
         });
 
-        // Ensure persistent roman slots 1–5 exist for this output.
         const byIdx = {};
         for (let j = 0; j < filtered.length; j++)
             byIdx[filtered[j].idx] = filtered[j];
@@ -70,39 +86,50 @@ Item {
 
     function cycleLayout() {
         Quickshell.execDetached(["niri", "msg", "action", "switch-layout", "next"]);
-        layoutProc.running = true;
     }
 
-    function refresh() {
-        wsProc.running = true;
-        winProc.running = true;
-        layoutProc.running = true;
-    }
-
-    Timer {
-        interval: 400
-        running: true
-        repeat: true
-        triggeredOnStart: true
-        onTriggered: root.refresh()
-    }
-
-    Process {
-        id: wsProc
-        command: ["niri", "msg", "-j", "workspaces"]
-        running: false
-        stdout: StdioCollector {
-            waitForEnd: true
-            onStreamFinished: {
-                try {
-                    root.workspaces = JSON.parse(text);
-                } catch (e) {}
+    function handleEvent(line) {
+        if (!line || !line.trim())
+            return;
+        try {
+            const ev = JSON.parse(line);
+            if (ev.WorkspacesChanged)
+                root.workspaces = ev.WorkspacesChanged.workspaces || [];
+            if (ev.WindowsChanged)
+                root.applyFocusedFromWindows(ev.WindowsChanged.windows || []);
+            if (ev.WindowOpenedOrChanged && ev.WindowOpenedOrChanged.window) {
+                const w = ev.WindowOpenedOrChanged.window;
+                if (w.is_focused) {
+                    root.focusedTitle = w.title || "";
+                    root.focusedAppId = w.app_id || "";
+                }
             }
+            if (ev.WindowFocusChanged) {
+                // Focus id alone — refresh from a quick focused-window probe.
+                winProbe.running = true;
+            }
+            if (ev.KeyboardLayoutsChanged && ev.KeyboardLayoutsChanged.keyboard_layouts) {
+                const kb = ev.KeyboardLayoutsChanged.keyboard_layouts;
+                root.keyboardNames = kb.names || [];
+                root.keyboardIndex = kb.current_idx || 0;
+            }
+        } catch (e) {}
+    }
+
+    // Live compositor events — title/workspaces update immediately.
+    Process {
+        id: eventStream
+        command: ["niri", "msg", "-j", "event-stream"]
+        running: true
+        stdout: SplitParser {
+            splitMarker: "\n"
+            onRead: data => root.handleEvent(data)
         }
     }
 
+    // Fallback when only a focus id is emitted.
     Process {
-        id: winProc
+        id: winProbe
         command: ["niri", "msg", "-j", "focused-window"]
         running: false
         stdout: StdioCollector {
@@ -125,19 +152,5 @@ Item {
         }
     }
 
-    Process {
-        id: layoutProc
-        command: ["niri", "msg", "-j", "keyboard-layouts"]
-        running: false
-        stdout: StdioCollector {
-            waitForEnd: true
-            onStreamFinished: {
-                try {
-                    const data = JSON.parse(text);
-                    root.keyboardNames = data.names || [];
-                    root.keyboardIndex = data.current_idx || 0;
-                } catch (e) {}
-            }
-        }
-    }
+    Component.onCompleted: winProbe.running = true
 }

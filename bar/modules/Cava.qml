@@ -5,7 +5,7 @@ import qs.bar
 
 Item {
     id: root
-    implicitWidth: Math.max(60, label.implicitWidth + Theme.modulePadH)
+    implicitWidth: Math.max(Theme.cavaMinWidth, label.implicitWidth + Theme.modulePadH)
     implicitHeight: Theme.barHeight
 
     property string bars: ""
@@ -26,6 +26,6 @@ Item {
         id: label
         anchors.centerIn: parent
         text: root.bars || "▁▁▁▁▁▁▁▁▁▁"
-        color: Theme.muted
+        color: Theme.text
     }
 }

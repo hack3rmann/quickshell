@@ -27,13 +27,13 @@ PanelWindow {
     WlrLayershell.namespace: "quickshell-bar"
     WlrLayershell.layer: WlrLayer.Top
 
-    RowLayout {
+    // Absolute screen-center for the middle cluster (not balanced against L/R widths).
+    Item {
         anchors.fill: parent
-        spacing: Theme.spacing
 
-        // Left
         RowLayout {
-            Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
             spacing: Theme.spacing
 
             Battery {}
@@ -48,19 +48,15 @@ PanelWindow {
             WindowTitle {}
         }
 
-        Item {
-            Layout.fillWidth: true
-        }
-
-        // Center
         RowLayout {
-            Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.verticalCenter: parent.verticalCenter
             spacing: Theme.spacing
 
             SwayncButton {}
             Cava {}
             Sep {
-                mark: "·"
+                mark: "|"
             }
             Clock {}
             Sep {
@@ -71,13 +67,9 @@ PanelWindow {
             }
         }
 
-        Item {
-            Layout.fillWidth: true
-        }
-
-        // Right
         RowLayout {
-            Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
             spacing: Theme.spacing
 
             Network {}
