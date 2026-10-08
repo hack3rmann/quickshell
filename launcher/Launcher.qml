@@ -32,7 +32,7 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: opened ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
-    // Frosted backdrop via ext-background-effect-v1 (supported by niri).
+    // Blur only behind the panel (not the whole screen).
     BackgroundEffect.blurRegion: root.opened ? blurRegion : null
 
     // Empty region while closed so the fullscreen overlay does not eat clicks.
@@ -49,7 +49,8 @@ PanelWindow {
 
     Region {
         id: blurRegion
-        item: maskCover
+        item: panel
+        radius: root.theme.radius
     }
 
     Item {
@@ -178,23 +179,11 @@ PanelWindow {
         onActivated: root.closeLauncher()
     }
 
-    Rectangle {
+    // Transparent click-catcher so the rest of the desktop stays visible.
+    MouseArea {
         anchors.fill: parent
-        color: root.theme.dim
-        opacity: root.opened ? 1 : 0
         visible: root.opened
-
-        Behavior on opacity {
-            NumberAnimation {
-                duration: 120
-                easing.type: Easing.OutCubic
-            }
-        }
-
-        MouseArea {
-            anchors.fill: parent
-            onClicked: root.closeLauncher()
-        }
+        onClicked: root.closeLauncher()
     }
 
     Rectangle {
