@@ -1,5 +1,5 @@
 import QtQuick
-import QtQuick.Effects
+import Qt5Compat.GraphicalEffects
 import Quickshell.Widgets
 import qs.bar
 
@@ -15,7 +15,7 @@ Item {
     property alias mipmap: img.mipmap
     property alias status: img.status
 
-    // Force mono recolor; otherwise auto for *-symbolic / Adwaita symbolic paths.
+    // Force light recolor (menu entries). Otherwise auto for *-symbolic paths.
     property bool forceMono: false
 
     readonly property bool ready: img.status === Image.Ready && img.source !== ""
@@ -25,7 +25,6 @@ Item {
         const src = String(img.source || "");
         if (!src)
             return false;
-        // GNOME/Adwaita symbolic icons are typically black — unreadable on crystal panels.
         return src.indexOf("symbolic") >= 0 || src.indexOf("/symbolic/") >= 0;
     }
 
@@ -40,21 +39,15 @@ Item {
         img.source = root.candidates.length ? root.candidates[0] : "";
     }
 
+    // Keep the raw image in-tree for ColorOverlay sampling; hide when recoloring.
     IconImage {
         id: img
         anchors.centerIn: parent
         implicitSize: root.implicitSize
         asynchronous: true
         source: ""
-        visible: root.ready
-        layer.enabled: root.ready && root.darkMono
-        layer.smooth: true
-        layer.effect: MultiEffect {
-            // Full recolor to bar/menu foreground (reads as a light invert of black glyphs).
-            colorization: 1.0
-            colorizationColor: Theme.text
-            brightness: 0.05
-        }
+        visible: root.ready && !root.darkMono
+        opacity: visible ? 1 : 0
 
         onStatusChanged: {
             if (status === Image.Error || status === Image.Null) {
@@ -66,5 +59,14 @@ Item {
                 }
             }
         }
+    }
+
+    // Reliable recolor for black/symbolic glyphs on crystal panels.
+    ColorOverlay {
+        anchors.fill: img
+        source: img
+        color: Theme.text
+        visible: root.ready && root.darkMono
+        cached: true
     }
 }

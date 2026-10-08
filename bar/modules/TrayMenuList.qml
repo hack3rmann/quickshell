@@ -132,6 +132,8 @@ Column {
                         anchors.centerIn: parent
                         candidates: leading.showCheck ? [] : leading.iconTries
                         implicitSize: Math.round(Math.max(1, parent.width || Theme.menuRowHeight * 0.65))
+                        // Menu glyphs are nearly always dark symbolic icons.
+                        forceMono: true
                     }
                 }
 
