@@ -9,7 +9,7 @@ QtObject {
     readonly property real fontSize: 12 * uiScale * fontFactor
     // Hug the glyph cell — no extra vertical padding that reads as top/bottom margins.
     readonly property real barHeight: Math.ceil(12 * uiScale)
-    readonly property real marginTop: 4
+    readonly property real marginTop: 8
     readonly property real marginBottom: 0
     readonly property real marginH: 8 * uiScale
     readonly property real spacing: 1.5 * uiScale
