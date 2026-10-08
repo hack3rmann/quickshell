@@ -1,4 +1,5 @@
 //@ pragma UseQApplication
+//@ pragma IconTheme Adwaita
 import Quickshell
 import Quickshell.Io
 import qs.launcher
