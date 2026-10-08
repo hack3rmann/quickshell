@@ -9,6 +9,7 @@ MouseArea {
     implicitHeight: Theme.barHeight
     acceptedButtons: Qt.LeftButton | Qt.RightButton
     cursorShape: Qt.PointingHandCursor
+    hoverEnabled: true
 
     property string iconText: "󰂚"
     property int count: 0
@@ -20,6 +21,13 @@ MouseArea {
         else
             Quickshell.execDetached(["bash", "-c", "sleep 0.1 && swaync-client -t -sw"]);
         poll.running = true;
+    }
+
+    Behavior on implicitWidth {
+        NumberAnimation {
+            duration: Theme.animFast
+            easing.type: Easing.OutCubic
+        }
     }
 
     Timer {
@@ -56,6 +64,8 @@ MouseArea {
     BarText {
         id: label
         anchors.centerIn: parent
+        scale: root.pressed ? Theme.pressScale : (root.containsMouse ? Theme.hoverScale : 1.0)
+        color: root.dnd ? Theme.muted : Theme.text
         text: root.count > 0 ? (root.iconText + " " + root.count) : root.iconText
     }
 }

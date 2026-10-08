@@ -7,6 +7,17 @@ Item {
     implicitWidth: label.implicitWidth + Theme.modulePadH * 2
     implicitHeight: Theme.barHeight
 
+    HoverHandler {
+        id: hover
+    }
+
+    Behavior on implicitWidth {
+        NumberAnimation {
+            duration: Theme.animFast
+            easing.type: Easing.OutCubic
+        }
+    }
+
     readonly property var wifiDevice: {
         const devices = Networking.devices.values || [];
         for (let i = 0; i < devices.length; i++) {
@@ -40,6 +51,7 @@ Item {
     BarText {
         id: label
         anchors.centerIn: parent
+        scale: hover.hovered ? Theme.hoverScale : 1.0
         text: {
             if (root.wiredDevice)
                 return "󰌘";

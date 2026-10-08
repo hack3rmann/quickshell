@@ -12,6 +12,7 @@ RowLayout {
         Layout.preferredWidth: tempLabel.implicitWidth + Theme.modulePadH * 2
         Layout.preferredHeight: Theme.barHeight
         cursorShape: Qt.PointingHandCursor
+        hoverEnabled: true
         onClicked: root.expanded = !root.expanded
 
         BarText {
@@ -19,6 +20,7 @@ RowLayout {
             anchors.centerIn: parent
             text: SysStats.cpuTempC + "°C 󰈸"
             color: SysStats.cpuTempC >= 99 ? Theme.critical : Theme.text
+            scale: anchor.pressed ? Theme.pressScale : (anchor.containsMouse ? Theme.hoverScale : 1.0)
         }
     }
 
@@ -28,17 +30,18 @@ RowLayout {
         clip: true
         Layout.preferredWidth: root.expanded ? implicitWidth : 0
         opacity: root.expanded ? 1 : 0
-        visible: Layout.preferredWidth > 0
+        visible: Layout.preferredWidth > 0.5
 
         Behavior on Layout.preferredWidth {
             NumberAnimation {
-                duration: 500
+                duration: Theme.animDrawer
                 easing.type: Easing.OutCubic
             }
         }
         Behavior on opacity {
             NumberAnimation {
-                duration: 300
+                duration: Theme.animNormal
+                easing.type: Easing.OutCubic
             }
         }
 

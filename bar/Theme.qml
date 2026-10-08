@@ -27,4 +27,13 @@ QtObject {
     readonly property color focused: "#d8dee9"
     readonly property color urgent: "#f53c3c"
     readonly property color critical: "#ff0000"
+
+    // Motion
+    readonly property int animFast: 140
+    readonly property int animNormal: 260
+    readonly property int animSlow: 420
+    readonly property int animDrawer: 500
+    readonly property int animCavaBar: 55
+    readonly property real hoverScale: 1.12
+    readonly property real pressScale: 0.92
 }

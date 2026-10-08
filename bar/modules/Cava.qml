@@ -9,15 +9,25 @@ Item {
     readonly property int barCount: 10
     readonly property real barWidth: 2.5 * Theme.uiScale
     readonly property real barGap: 1.5 * Theme.uiScale
-
-    // Collapse completely when silent so the center cluster reflows.
-    implicitWidth: shown ? row.implicitWidth + Theme.modulePadH : 0
-    implicitHeight: Theme.barHeight
-    opacity: shown ? 1 : 0
-    clip: true
-    visible: implicitWidth > 0
+    readonly property real fullWidth: row.implicitWidth + Theme.modulePadH
 
     property bool shown: false
+    // Animated reveal so show/hide doesn't pop.
+    property real reveal: shown ? 1 : 0
+
+    Behavior on reveal {
+        NumberAnimation {
+            duration: Theme.animNormal
+            easing.type: Easing.OutCubic
+        }
+    }
+
+    implicitWidth: fullWidth * reveal
+    implicitHeight: Theme.barHeight
+    opacity: reveal
+    clip: true
+    visible: reveal > 0.01
+
     // 0–7 levels from cava (via WaybarCava ▁▂▃▄▅▆▇█ mapping).
     property var levels: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
@@ -50,14 +60,12 @@ Item {
                     hideTimer.stop();
                     root.shown = true;
                 } else if (root.shown && !hideTimer.running) {
-                    // Start once on silence — restarting every frame would never fire.
                     hideTimer.start();
                 }
             }
         }
     }
 
-    // Grace period so brief silence doesn't flicker the module away.
     Timer {
         id: hideTimer
         interval: 1200
@@ -88,6 +96,13 @@ Item {
                     }
                     color: Theme.text
                     radius: 0.5
+
+                    Behavior on height {
+                        NumberAnimation {
+                            duration: Theme.animCavaBar
+                            easing.type: Easing.OutCubic
+                        }
+                    }
                 }
             }
         }

@@ -7,6 +7,7 @@ MouseArea {
     implicitWidth: label.implicitWidth + Theme.modulePadH * 2
     implicitHeight: Theme.barHeight
     cursorShape: Qt.PointingHandCursor
+    hoverEnabled: true
 
     readonly property bool performance: PowerProfiles.profile === PowerProfile.Performance
 
@@ -21,5 +22,6 @@ MouseArea {
         anchors.centerIn: parent
         text: root.performance ? "󰓅" : "󰾅"
         color: root.performance ? Theme.text : Theme.muted
+        scale: root.pressed ? Theme.pressScale : (root.containsMouse ? Theme.hoverScale : 1.0)
     }
 }

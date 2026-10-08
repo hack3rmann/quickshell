@@ -32,6 +32,18 @@ PanelWindow {
     Item {
         id: content
         anchors.fill: parent
+        opacity: 0
+
+        Component.onCompleted: contentFade.start()
+
+        NumberAnimation {
+            id: contentFade
+            target: content
+            property: "opacity"
+            to: 1
+            duration: Theme.animSlow
+            easing.type: Easing.OutCubic
+        }
 
         RowLayout {
             id: leftRow

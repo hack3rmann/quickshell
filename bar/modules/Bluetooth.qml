@@ -7,6 +7,17 @@ Item {
     implicitWidth: label.implicitWidth + Theme.modulePadH * 2
     implicitHeight: Theme.barHeight
 
+    HoverHandler {
+        id: hover
+    }
+
+    Behavior on implicitWidth {
+        NumberAnimation {
+            duration: Theme.animFast
+            easing.type: Easing.OutCubic
+        }
+    }
+
     readonly property var adapter: Bluetooth.defaultAdapter
     readonly property bool powered: adapter && adapter.enabled
     readonly property int connectedCount: {
@@ -22,6 +33,7 @@ Item {
     BarText {
         id: label
         anchors.centerIn: parent
+        scale: hover.hovered ? Theme.hoverScale : 1.0
         text: {
             if (!root.powered)
                 return "󰂲";

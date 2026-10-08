@@ -19,7 +19,10 @@ RowLayout {
             Layout.preferredWidth: label.implicitWidth + 10 * Theme.uiScale
             Layout.preferredHeight: Theme.barHeight
             cursorShape: Qt.PointingHandCursor
+            hoverEnabled: true
             onClicked: Niri.focusWorkspace(modelData)
+
+            readonly property bool active: !!(modelData.is_active || modelData.is_focused)
 
             BarText {
                 id: label
@@ -31,11 +34,12 @@ RowLayout {
                 color: {
                     if (modelData.is_urgent)
                         return Theme.urgent;
-                    if (modelData.is_active || modelData.is_focused)
+                    if (ws.active)
                         return Theme.text;
                     return Theme.muted;
                 }
-                font.bold: !!(modelData.is_active || modelData.is_focused)
+                font.bold: ws.active
+                scale: ws.pressed ? Theme.pressScale : (ws.containsMouse ? Theme.hoverScale : (ws.active ? 1.06 : 1.0))
             }
         }
     }

@@ -14,4 +14,18 @@ Text {
     verticalAlignment: Text.AlignVCenter
     leftPadding: Theme.sepPadH
     rightPadding: Theme.sepPadH
+    opacity: 0.85
+
+    Behavior on opacity {
+        NumberAnimation {
+            duration: Theme.animFast
+            easing.type: Easing.OutCubic
+        }
+    }
+    Behavior on color {
+        ColorAnimation {
+            duration: Theme.animFast
+            easing.type: Easing.OutCubic
+        }
+    }
 }

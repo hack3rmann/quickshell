@@ -16,10 +16,12 @@ RowLayout {
     readonly property var source: Pipewire.defaultAudioSource
 
     MouseArea {
+        id: sinkArea
         Layout.preferredWidth: sinkLabel.implicitWidth + Theme.modulePadH
         Layout.preferredHeight: Theme.barHeight
         acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
         cursorShape: Qt.PointingHandCursor
+        hoverEnabled: true
         onClicked: event => {
             if (event.button === Qt.RightButton)
                 Quickshell.execDetached(["pavucontrol", "-t", "3"]);
@@ -30,9 +32,17 @@ RowLayout {
             Quickshell.execDetached([Quickshell.env("HOME") + "/.config/hypr/scripts/Volume.sh", event.angleDelta.y > 0 ? "--inc" : "--dec"]);
         }
 
+        Behavior on Layout.preferredWidth {
+            NumberAnimation {
+                duration: Theme.animFast
+                easing.type: Easing.OutCubic
+            }
+        }
+
         BarText {
             id: sinkLabel
             anchors.centerIn: parent
+            scale: sinkArea.pressed ? Theme.pressScale : (sinkArea.containsMouse ? Theme.hoverScale : 1.0)
             text: {
                 const s = root.sink;
                 if (!s || !s.audio)
@@ -50,10 +60,12 @@ RowLayout {
     }
 
     MouseArea {
+        id: micArea
         Layout.preferredWidth: micLabel.implicitWidth + Theme.modulePadH
         Layout.preferredHeight: Theme.barHeight
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         cursorShape: Qt.PointingHandCursor
+        hoverEnabled: true
         onClicked: event => {
             if (event.button === Qt.RightButton)
                 Quickshell.execDetached(["pavucontrol", "-t", "4"]);
@@ -64,9 +76,17 @@ RowLayout {
             Quickshell.execDetached([Quickshell.env("HOME") + "/.config/hypr/scripts/Volume.sh", event.angleDelta.y > 0 ? "--mic-inc" : "--mic-dec"]);
         }
 
+        Behavior on Layout.preferredWidth {
+            NumberAnimation {
+                duration: Theme.animFast
+                easing.type: Easing.OutCubic
+            }
+        }
+
         BarText {
             id: micLabel
             anchors.centerIn: parent
+            scale: micArea.pressed ? Theme.pressScale : (micArea.containsMouse ? Theme.hoverScale : 1.0)
             text: {
                 const s = root.source;
                 if (!s || !s.audio)

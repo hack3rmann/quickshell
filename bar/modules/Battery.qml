@@ -13,10 +13,18 @@ MouseArea {
     readonly property bool charging: device && (device.state === UPowerDeviceState.Charging || device.state === UPowerDeviceState.FullyCharged || device.state === UPowerDeviceState.PendingCharge)
     readonly property bool critical: device && !charging && pct <= 15
 
+    Behavior on implicitWidth {
+        NumberAnimation {
+            duration: Theme.animFast
+            easing.type: Easing.OutCubic
+        }
+    }
+
     BarText {
         id: label
         anchors.centerIn: parent
         color: root.critical ? Theme.urgent : Theme.text
+        scale: root.containsMouse ? Theme.hoverScale : 1.0
         text: {
             if (!root.device || !root.device.isLaptopBattery)
                 return "󰚥";

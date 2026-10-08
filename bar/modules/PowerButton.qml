@@ -7,11 +7,13 @@ MouseArea {
     implicitWidth: label.implicitWidth + Theme.modulePadH * 2
     implicitHeight: Theme.barHeight
     cursorShape: Qt.PointingHandCursor
+    hoverEnabled: true
     onClicked: Quickshell.execDetached([Quickshell.env("HOME") + "/.config/hypr/scripts/Wlogout.sh"])
 
     BarText {
         id: label
         anchors.centerIn: parent
         text: "⏻"
+        scale: root.pressed ? Theme.pressScale : (root.containsMouse ? Theme.hoverScale : 1.0)
     }
 }
