@@ -1,0 +1,4 @@
+module launcher
+singleton Search 1.0 Search.qml
+singleton Themes 1.0 Themes.qml
+Launcher 1.0 Launcher.qml
