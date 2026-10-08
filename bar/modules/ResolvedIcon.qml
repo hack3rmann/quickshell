@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Effects
 import Quickshell.Widgets
 import qs.bar
 
@@ -14,7 +15,19 @@ Item {
     property alias mipmap: img.mipmap
     property alias status: img.status
 
+    // Force mono recolor; otherwise auto for *-symbolic / Adwaita symbolic paths.
+    property bool forceMono: false
+
     readonly property bool ready: img.status === Image.Ready && img.source !== ""
+    readonly property bool darkMono: {
+        if (root.forceMono)
+            return true;
+        const src = String(img.source || "");
+        if (!src)
+            return false;
+        // GNOME/Adwaita symbolic icons are typically black — unreadable on crystal panels.
+        return src.indexOf("symbolic") >= 0 || src.indexOf("/symbolic/") >= 0;
+    }
 
     implicitWidth: implicitSize
     implicitHeight: implicitSize
@@ -34,6 +47,14 @@ Item {
         asynchronous: true
         source: ""
         visible: root.ready
+        layer.enabled: root.ready && root.darkMono
+        layer.smooth: true
+        layer.effect: MultiEffect {
+            // Full recolor to bar/menu foreground (reads as a light invert of black glyphs).
+            colorization: 1.0
+            colorizationColor: Theme.text
+            brightness: 0.05
+        }
 
         onStatusChanged: {
             if (status === Image.Error || status === Image.Null) {
