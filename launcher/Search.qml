@@ -31,7 +31,7 @@ Item {
             const alphabetical = apps.slice().sort(function (a, b) {
                 return (a.name || "").localeCompare(b.name || "");
             });
-            for (let i = 0; i < alphabetical.length && results.length < root.maxResults; i++) {
+            for (let i = 0; i < alphabetical.length; i++) {
                 results.push({
                     type: "app",
                     name: alphabetical[i].name || alphabetical[i].id || "",
