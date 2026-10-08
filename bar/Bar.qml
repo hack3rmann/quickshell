@@ -29,9 +29,11 @@ PanelWindow {
 
     // Absolute screen-center for the middle cluster (not balanced against L/R widths).
     Item {
+        id: content
         anchors.fill: parent
 
         RowLayout {
+            id: leftRow
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
             spacing: Theme.spacing
@@ -45,10 +47,15 @@ PanelWindow {
             Sep {
                 mark: "|"
             }
-            WindowTitle {}
+            WindowTitle {
+                id: windowTitle
+                // Elide only once the title would collide with the centered cluster.
+                maxWidth: Math.max(0, centerRow.x - (leftRow.x + windowTitle.x) - Theme.spacing)
+            }
         }
 
         RowLayout {
+            id: centerRow
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
             spacing: Theme.spacing

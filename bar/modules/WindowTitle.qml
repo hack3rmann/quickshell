@@ -3,16 +3,21 @@ import qs.bar
 
 Item {
     id: root
-    implicitWidth: Math.min(Theme.titleMaxWidth, label.implicitWidth + Theme.modulePadH * 2)
+    // Cap at the center cluster; otherwise size to the full title.
+    property real maxWidth: Number.POSITIVE_INFINITY
+
+    readonly property real contentWidth: label.implicitWidth + Theme.modulePadH * 2
+    implicitWidth: Number.isFinite(root.maxWidth) ? Math.min(root.maxWidth, root.contentWidth) : root.contentWidth
     implicitHeight: Theme.barHeight
     clip: true
+    visible: !!(Niri.focusedTitle || Niri.focusedAppId)
 
     BarText {
         id: label
         anchors.verticalCenter: parent.verticalCenter
         anchors.left: parent.left
         anchors.leftMargin: Theme.modulePadH
-        width: parent.width - Theme.modulePadH * 2
+        width: Math.max(0, parent.width - Theme.modulePadH * 2)
         elide: Text.ElideRight
         text: {
             const title = Niri.focusedTitle || "";
