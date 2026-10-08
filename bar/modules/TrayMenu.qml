@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell
+import Quickshell.Wayland
 import qs.bar
 
 PopupWindow {
@@ -21,6 +22,15 @@ PopupWindow {
     implicitWidth: frame.implicitWidth
     implicitHeight: frame.implicitHeight
 
+    // Blur only behind the menu panel (same approach as the launcher).
+    BackgroundEffect.blurRegion: root.visible ? blurRegion : null
+
+    Region {
+        id: blurRegion
+        item: frame
+        radius: Theme.radius
+    }
+
     function open() {
         if (!root.menu || !root.anchorItem)
             return;
@@ -31,7 +41,26 @@ PopupWindow {
         root.visible = false;
     }
 
-    onVisibleChanged: root.isOpen = visible
+    onVisibleChanged: {
+        root.isOpen = visible;
+        if (visible)
+            blurKick.restart();
+        else
+            blurKick.stop();
+    }
+
+    Timer {
+        id: blurKick
+        interval: 16
+        repeat: false
+        onTriggered: {
+            if (!root.visible)
+                return;
+            // Re-apply after layout so the region matches the panel geometry.
+            BackgroundEffect.blurRegion = null;
+            BackgroundEffect.blurRegion = blurRegion;
+        }
+    }
 
     Rectangle {
         id: frame
