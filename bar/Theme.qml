@@ -13,7 +13,7 @@ QtObject {
     readonly property real spacing: 3 * uiScale
     readonly property real modulePadH: 6 * uiScale
     readonly property real modulePadV: 2 * uiScale
-    readonly property real titleMaxWidth: 280 * uiScale
+    readonly property real titleMaxWidth: 280 * uiScale * 2.5
     readonly property real cavaMinWidth: 60 * uiScale
 
     readonly property color text: "whitesmoke"
