@@ -14,7 +14,7 @@ Item {
             name: "crystal",
             fontFamily: "JetBrains Mono Nerd Font",
             panelBg: Qt.rgba(0, 0, 0, 0.4),
-            panelBorder: Qt.rgba(1, 1, 1, 0.12),
+            panelBorder: Qt.rgba(1, 1, 1, 0.55),
             radius: root.s(8),
             borderWidth: root.s(1),
             text: "whitesmoke",
