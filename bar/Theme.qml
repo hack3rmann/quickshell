@@ -7,12 +7,14 @@ QtObject {
 
     readonly property string fontFamily: "JetBrains Mono Nerd Font"
     readonly property real fontSize: 12 * uiScale * fontFactor
-    readonly property real barHeight: 30 * uiScale
+    // Hug the glyph cell — no extra vertical padding that reads as top/bottom margins.
+    readonly property real barHeight: Math.ceil(12 * uiScale)
     readonly property real marginTop: 0
+    readonly property real marginBottom: 0
     readonly property real marginH: 8 * uiScale
     readonly property real spacing: 1.5 * uiScale
     readonly property real modulePadH: 6 * uiScale
-    readonly property real modulePadV: 2 * uiScale
+    readonly property real modulePadV: 0
     readonly property real sepPadH: 1 * uiScale
     readonly property real cavaMinWidth: 60 * uiScale
 
