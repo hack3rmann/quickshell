@@ -10,9 +10,10 @@ QtObject {
     readonly property real barHeight: 30 * uiScale
     readonly property real marginTop: 3 * uiScale
     readonly property real marginH: 8 * uiScale
-    readonly property real spacing: 3 * uiScale
+    readonly property real spacing: 1.5 * uiScale
     readonly property real modulePadH: 6 * uiScale
     readonly property real modulePadV: 2 * uiScale
+    readonly property real sepPadH: 1 * uiScale
     readonly property real cavaMinWidth: 60 * uiScale
 
     readonly property color text: "whitesmoke"

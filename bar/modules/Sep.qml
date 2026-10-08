@@ -11,6 +11,6 @@ Text {
     transformOrigin: Item.Center
     font.bold: true
     verticalAlignment: Text.AlignVCenter
-    leftPadding: 2 * Theme.uiScale
-    rightPadding: 2 * Theme.uiScale
+    leftPadding: Theme.sepPadH
+    rightPadding: Theme.sepPadH
 }

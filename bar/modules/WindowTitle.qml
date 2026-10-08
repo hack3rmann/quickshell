@@ -18,6 +18,7 @@ Item {
         anchors.left: parent.left
         anchors.leftMargin: Theme.modulePadH
         width: Math.max(0, parent.width - Theme.modulePadH * 2)
+        horizontalAlignment: Text.AlignLeft
         elide: Text.ElideRight
         text: {
             const title = Niri.focusedTitle || "";

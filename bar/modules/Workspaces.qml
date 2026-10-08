@@ -4,7 +4,7 @@ import qs.bar
 
 RowLayout {
     id: root
-    spacing: 2 * Theme.uiScale
+    spacing: 1 * Theme.uiScale
     required property string outputName
 
     readonly property var roman: ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"]
