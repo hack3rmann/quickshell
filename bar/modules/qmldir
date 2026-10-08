@@ -1,0 +1,16 @@
+module bar.modules
+BarText 1.0 BarText.qml
+Sep 1.0 Sep.qml
+Battery 1.0 Battery.qml
+PerfProfile 1.0 PerfProfile.qml
+MoboDrawer 1.0 MoboDrawer.qml
+WindowTitle 1.0 WindowTitle.qml
+SwayncButton 1.0 SwayncButton.qml
+Cava 1.0 Cava.qml
+Clock 1.0 Clock.qml
+Workspaces 1.0 Workspaces.qml
+Network 1.0 Network.qml
+Bluetooth 1.0 Bluetooth.qml
+Audio 1.0 Audio.qml
+KeyboardLayout 1.0 KeyboardLayout.qml
+PowerButton 1.0 PowerButton.qml
