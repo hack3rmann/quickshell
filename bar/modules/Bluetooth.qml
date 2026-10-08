@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import Quickshell.Bluetooth
 import qs.bar
 
@@ -6,6 +7,8 @@ Item {
     id: root
     implicitWidth: label.implicitWidth + Theme.modulePadH * 2
     implicitHeight: Theme.barHeight
+
+    readonly property bool menuOpen: popup.isOpen
 
     HoverHandler {
         id: hover
@@ -33,7 +36,7 @@ Item {
     BarText {
         id: label
         anchors.centerIn: parent
-        scale: hover.hovered ? Theme.hoverScale : 1.0
+        scale: (hover.hovered || root.menuOpen) ? Theme.hoverScale : 1.0
         text: {
             if (!root.powered)
                 return "󰂲";
@@ -42,5 +45,28 @@ Item {
             return "󰂯";
         }
         color: root.powered ? Theme.text : Theme.muted
+    }
+
+    MouseArea {
+        id: hit
+        anchors.fill: parent
+        hoverEnabled: true
+        cursorShape: Qt.PointingHandCursor
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        onClicked: event => {
+            if (event.button === Qt.RightButton) {
+                Quickshell.execDetached(["blueman-manager"]);
+                return;
+            }
+            if (popup.visible)
+                popup.close();
+            else
+                popup.open();
+        }
+    }
+
+    BluetoothPopup {
+        id: popup
+        anchorItem: hit
     }
 }

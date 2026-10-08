@@ -14,6 +14,7 @@ Clock 1.0 Clock.qml
 Workspaces 1.0 Workspaces.qml
 Network 1.0 Network.qml
 Bluetooth 1.0 Bluetooth.qml
+BluetoothPopup 1.0 BluetoothPopup.qml
 Audio 1.0 Audio.qml
 KeyboardLayout 1.0 KeyboardLayout.qml
 PowerButton 1.0 PowerButton.qml
