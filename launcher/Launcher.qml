@@ -59,10 +59,45 @@ PanelWindow {
         searchField.text = "";
         refreshResults();
         searchField.forceActiveFocus();
+        // DesktopEntries may still be empty right after qs starts.
+        if (results.length === 0)
+            appsReadyRetry.restart();
+    }
+
+    Connections {
+        target: DesktopEntries
+        function onApplicationsChanged() {
+            if (root.opened)
+                root.refreshResults();
+        }
+    }
+
+    Connections {
+        target: DesktopEntries.applications
+        function onValuesChanged() {
+            if (root.opened)
+                root.refreshResults();
+        }
+    }
+
+    Timer {
+        id: appsReadyRetry
+        interval: 150
+        repeat: true
+        onTriggered: {
+            if (!root.opened) {
+                stop();
+                return;
+            }
+            root.refreshResults();
+            if (root.results.length > 0 || DesktopEntries.applications.values.length > 0)
+                stop();
+        }
     }
 
     function closeLauncher() {
         opened = false;
+        appsReadyRetry.stop();
         searchField.text = "";
         searchField.focus = false;
         results = [];
