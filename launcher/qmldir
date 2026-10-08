@@ -1,5 +1,4 @@
 module launcher
 singleton Search 1.0 Search.qml
 singleton Themes 1.0 Themes.qml
-singleton Easings 1.0 Easings.qml
 Launcher 1.0 Launcher.qml

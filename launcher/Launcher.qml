@@ -214,8 +214,8 @@ PanelWindow {
 
         Behavior on height {
             NumberAnimation {
-                duration: Easings.current.duration
-                easing.type: Easings.current.type
+                duration: 160
+                easing.type: Easing.OutBack
             }
         }
 
@@ -251,7 +251,7 @@ PanelWindow {
                     anchors.leftMargin: root.theme.padding
                     anchors.rightMargin: root.theme.padding
                     color: root.theme.text
-                    placeholderText: "search  ·  math  ·  ctrl+e " + Easings.current.label
+                    placeholderText: "search apps  ·  math"
                     placeholderTextColor: root.theme.muted
                     font.family: root.theme.fontFamily
                     font.pixelSize: root.theme.fontSize
@@ -282,9 +282,6 @@ PanelWindow {
                             event.accepted = true;
                         } else if (event.key === Qt.Key_Escape) {
                             root.requestClose();
-                            event.accepted = true;
-                        } else if (event.key === Qt.Key_E && (event.modifiers & Qt.ControlModifier)) {
-                            Easings.cycle();
                             event.accepted = true;
                         }
                     }
