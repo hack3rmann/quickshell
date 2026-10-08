@@ -91,8 +91,9 @@ PanelWindow {
         listView.positionViewAtIndex(selectedIndex, ListView.Contain);
     }
 
-    // Bundled SVG — theme iconPath fallbacks often resolve to Qt's checkerboard texture.
+    // Bundled SVGs — theme iconPath fallbacks often resolve to Qt's checkerboard texture.
     readonly property string defaultAppIcon: Qt.resolvedUrl(Quickshell.shellPath("assets/app-default.svg"))
+    readonly property string mathIcon: Qt.resolvedUrl(Quickshell.shellPath("assets/math.svg"))
 
     function appIconSource(app) {
         if (!app)
@@ -287,10 +288,7 @@ PanelWindow {
                             Layout.preferredWidth: root.theme.iconSize
                             Layout.preferredHeight: root.theme.iconSize
                             implicitSize: root.theme.iconSize
-                            source: {
-                                const calc = Quickshell.iconPath("accessories-calculator", true);
-                                return calc || root.defaultAppIcon;
-                            }
+                            source: root.mathIcon
                         }
 
                         ColumnLayout {
