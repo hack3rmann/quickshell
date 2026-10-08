@@ -91,16 +91,18 @@ PanelWindow {
         listView.positionViewAtIndex(selectedIndex, ListView.Contain);
     }
 
-    readonly property string defaultAppIcon: Quickshell.iconPath("application-x-executable")
+    // Bundled SVG — theme iconPath fallbacks often resolve to Qt's checkerboard texture.
+    readonly property string defaultAppIcon: Qt.resolvedUrl(Quickshell.shellPath("assets/app-default.svg"))
 
     function appIconSource(app) {
         if (!app)
             return root.defaultAppIcon;
-        const icon = app.icon || "";
+        const icon = (app.icon || "").trim();
         if (!icon)
             return root.defaultAppIcon;
+        // check=true returns "" instead of the missing-texture placeholder
         const path = Quickshell.iconPath(icon, true);
-        return path || root.defaultAppIcon;
+        return path ? path : root.defaultAppIcon;
     }
 
     IpcHandler {
@@ -271,8 +273,10 @@ PanelWindow {
                             Layout.preferredWidth: root.theme.iconSize
                             Layout.preferredHeight: root.theme.iconSize
                             implicitSize: root.theme.iconSize
+                            asynchronous: true
                             source: row.modelData.type === "app" ? root.appIconSource(row.modelData.app) : ""
                             onStatusChanged: {
+                                // Absolute paths / broken files may still fail after a non-empty iconPath.
                                 if (status === Image.Error && source !== root.defaultAppIcon)
                                     source = root.defaultAppIcon;
                             }
