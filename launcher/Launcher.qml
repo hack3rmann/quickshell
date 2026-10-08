@@ -63,7 +63,29 @@ PanelWindow {
         selectedIndex = results.length > 0 ? 0 : -1;
     }
 
+    function screenByName(name) {
+        const screens = Quickshell.screens;
+        for (let i = 0; i < screens.length; i++) {
+            if (screens[i].name === name)
+                return screens[i];
+        }
+        return null;
+    }
+
+    function applyFocusedScreen(outputName) {
+        const match = screenByName(outputName);
+        if (match)
+            root.screen = match;
+    }
+
     function openLauncher() {
+        // Resolve the focused niri output first so we appear on eDP-1 / DP-1 correctly.
+        if (focusProbe.running)
+            focusProbe.running = false;
+        focusProbe.running = true;
+    }
+
+    function showOnCurrentScreen() {
         opened = true;
         searchField.text = "";
         refreshResults();
@@ -71,6 +93,24 @@ PanelWindow {
         // DesktopEntries may still be empty right after qs starts.
         if (results.length === 0)
             appsReadyRetry.restart();
+    }
+
+    Process {
+        id: focusProbe
+        command: ["niri", "msg", "-j", "focused-output"]
+        running: false
+        stdout: StdioCollector {
+            waitForEnd: true
+            onStreamFinished: {
+                try {
+                    const data = JSON.parse(text);
+                    root.applyFocusedScreen(data.name);
+                } catch (e) {
+                    console.warn("focused-output parse failed:", e);
+                }
+                root.showOnCurrentScreen();
+            }
+        }
     }
 
     Connections {
