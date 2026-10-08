@@ -49,8 +49,9 @@ Item {
                 if (!root.levelsSilent(next)) {
                     hideTimer.stop();
                     root.shown = true;
-                } else if (root.shown) {
-                    hideTimer.restart();
+                } else if (root.shown && !hideTimer.running) {
+                    // Start once on silence — restarting every frame would never fire.
+                    hideTimer.start();
                 }
             }
         }
