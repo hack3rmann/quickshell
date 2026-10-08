@@ -145,6 +145,7 @@ QtObject {
     readonly property real radius: Math.round(8 * uiScale / 1.5)
     readonly property real borderWidth: Math.max(1, Math.round(1.5 * uiScale / 1.5))
     readonly property real menuPad: Math.round(8 * uiScale / 1.5)
+    readonly property real menuIconGap: Math.round(10 * uiScale / 1.5)
     readonly property real menuRowHeight: Math.round(28 * uiScale / 1.5)
     readonly property real menuFontPointSize: fontPointSize
 

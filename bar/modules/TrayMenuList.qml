@@ -22,7 +22,7 @@ Column {
                 continue;
             let ew = fm.advanceWidth(root.clean(e.text)) + Theme.menuPad * 2;
             if (e.buttonType !== QsMenuButtonType.None || Theme.iconCandidates(e.icon).length)
-                ew += Theme.menuRowHeight * 0.7 + Theme.spacing;
+                ew += Theme.menuRowHeight * 0.7 + Theme.menuIconGap;
             if (e.hasChildren)
                 ew += Theme.menuRowHeight * 0.6;
             w = Math.max(w, ew);
@@ -139,7 +139,7 @@ Column {
 
                 Text {
                     anchors.left: leading.right
-                    anchors.leftMargin: leading.width > 0 ? Theme.spacing : Theme.menuPad
+                    anchors.leftMargin: leading.width > 0 ? Theme.menuIconGap : Theme.menuPad
                     anchors.right: arrow.left
                     anchors.rightMargin: Theme.spacing
                     anchors.verticalCenter: parent.verticalCenter
