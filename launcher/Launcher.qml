@@ -294,7 +294,9 @@ PanelWindow {
                     Rectangle {
                         anchors.fill: parent
                         radius: Math.max(4, root.theme.radius - 4)
-                        color: row.selected ? root.theme.selectBg : "transparent"
+                        color: "transparent"
+                        border.width: row.selected ? Math.max(1, Math.round(root.theme.borderWidth * 0.75)) : 0
+                        border.color: root.theme.panelBorder
                     }
 
                     RowLayout {
