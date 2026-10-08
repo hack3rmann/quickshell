@@ -8,7 +8,7 @@ QtObject {
     readonly property string fontFamily: "JetBrains Mono Nerd Font"
     readonly property real fontSize: 12 * uiScale * fontFactor
     readonly property real barHeight: 30 * uiScale
-    readonly property real marginTop: 3 * uiScale
+    readonly property real marginTop: 0
     readonly property real marginH: 8 * uiScale
     readonly property real spacing: 1.5 * uiScale
     readonly property real modulePadH: 6 * uiScale
