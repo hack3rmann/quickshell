@@ -57,6 +57,14 @@ ShellRoot {
         function close(): void {
             shell.closeLauncher();
         }
+
+        function cycleEasing(): void {
+            Easings.cycle();
+        }
+
+        function setEasing(name: string): void {
+            Easings.setEasing(name);
+        }
     }
 
     // One surface per screen keeps background blur attached when switching outputs.
