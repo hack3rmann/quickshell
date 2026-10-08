@@ -28,6 +28,16 @@ QtObject {
     readonly property color urgent: "#f53c3c"
     readonly property color critical: "#ff0000"
 
+    // Crystal Clear panels (match launcher)
+    readonly property color panelBg: Qt.rgba(0, 0, 0, 0.4)
+    readonly property color panelBorder: Qt.rgba(1, 1, 1, 0.9)
+    readonly property color selectBg: Qt.rgba(1, 1, 1, 0.12)
+    readonly property real radius: Math.round(8 * uiScale / 1.5)
+    readonly property real borderWidth: Math.max(1, Math.round(1.5 * uiScale / 1.5))
+    readonly property real menuPad: Math.round(8 * uiScale / 1.5)
+    readonly property real menuRowHeight: Math.round(28 * uiScale / 1.5)
+    readonly property real menuFontPointSize: fontPointSize
+
     // Motion
     readonly property int animFast: 140
     readonly property int animNormal: 260

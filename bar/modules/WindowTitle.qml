@@ -141,14 +141,12 @@ Item {
                             modelData.scroll(event.angleDelta.y, false);
                         }
 
-                        QsMenuAnchor {
+                        TrayMenu {
                             id: trayMenu
                             menu: trayItem.modelData.menu
-                            anchor.item: trayItem
-                            anchor.edges: Edges.Bottom
-                            anchor.gravity: Edges.Bottom
-                            onOpened: root.menuOpen++
-                            onClosed: root.menuOpen = Math.max(0, root.menuOpen - 1)
+                            anchorItem: trayItem
+                            onMenuOpened: root.menuOpen++
+                            onMenuClosed: root.menuOpen = Math.max(0, root.menuOpen - 1)
                         }
                     }
                 }
