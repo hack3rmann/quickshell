@@ -14,6 +14,8 @@ PanelWindow {
     property int selectedIndex: 0
     property var results: []
 
+    signal closeRequested
+
     readonly property var theme: Themes.current
 
     anchors {
@@ -63,53 +65,38 @@ PanelWindow {
         selectedIndex = results.length > 0 ? 0 : -1;
     }
 
-    function screenByName(name) {
-        const screens = Quickshell.screens;
-        for (let i = 0; i < screens.length; i++) {
-            if (screens[i].name === name)
-                return screens[i];
+    function requestClose() {
+        root.closeRequested();
+    }
+
+    onOpenedChanged: {
+        if (opened) {
+            searchField.text = "";
+            refreshResults();
+            searchField.forceActiveFocus();
+            if (results.length === 0)
+                appsReadyRetry.restart();
+            // Re-apply blur after layout so the region matches the panel geometry.
+            blurKick.restart();
+        } else {
+            appsReadyRetry.stop();
+            blurKick.stop();
+            searchField.text = "";
+            searchField.focus = false;
+            results = [];
+            selectedIndex = -1;
         }
-        return null;
     }
 
-    function applyFocusedScreen(outputName) {
-        const match = screenByName(outputName);
-        if (match)
-            root.screen = match;
-    }
-
-    function openLauncher() {
-        // Resolve the focused niri output first so we appear on eDP-1 / DP-1 correctly.
-        if (focusProbe.running)
-            focusProbe.running = false;
-        focusProbe.running = true;
-    }
-
-    function showOnCurrentScreen() {
-        opened = true;
-        searchField.text = "";
-        refreshResults();
-        searchField.forceActiveFocus();
-        // DesktopEntries may still be empty right after qs starts.
-        if (results.length === 0)
-            appsReadyRetry.restart();
-    }
-
-    Process {
-        id: focusProbe
-        command: ["niri", "msg", "-j", "focused-output"]
-        running: false
-        stdout: StdioCollector {
-            waitForEnd: true
-            onStreamFinished: {
-                try {
-                    const data = JSON.parse(text);
-                    root.applyFocusedScreen(data.name);
-                } catch (e) {
-                    console.warn("focused-output parse failed:", e);
-                }
-                root.showOnCurrentScreen();
-            }
+    Timer {
+        id: blurKick
+        interval: 16
+        repeat: false
+        onTriggered: {
+            if (!root.opened)
+                return;
+            BackgroundEffect.blurRegion = null;
+            BackgroundEffect.blurRegion = blurRegion;
         }
     }
 
@@ -148,27 +135,18 @@ PanelWindow {
         }
     }
 
-    function closeLauncher() {
-        opened = false;
-        appsReadyRetry.stop();
-        searchField.text = "";
-        searchField.focus = false;
-        results = [];
-        selectedIndex = -1;
-    }
-
     function activateSelected() {
         if (selectedIndex < 0 || selectedIndex >= results.length)
             return;
         const item = results[selectedIndex];
         if (item.type === "math") {
             Quickshell.execDetached(["wl-copy", item.value]);
-            closeLauncher();
+            requestClose();
             return;
         }
         if (item.type === "app" && item.app) {
             item.app.execute();
-            closeLauncher();
+            requestClose();
         }
     }
 
@@ -194,36 +172,17 @@ PanelWindow {
         return path ? path : root.defaultAppIcon;
     }
 
-    IpcHandler {
-        target: "launcher"
-
-        function toggle(): void {
-            if (root.opened)
-                root.closeLauncher();
-            else
-                root.openLauncher();
-        }
-
-        function open(): void {
-            root.openLauncher();
-        }
-
-        function close(): void {
-            root.closeLauncher();
-        }
-    }
-
     Shortcut {
         sequence: "Escape"
         enabled: root.opened
-        onActivated: root.closeLauncher()
+        onActivated: root.requestClose()
     }
 
     // Transparent click-catcher so the rest of the desktop stays visible.
     MouseArea {
         anchors.fill: parent
         visible: root.opened
-        onClicked: root.closeLauncher()
+        onClicked: root.requestClose()
     }
 
     Rectangle {
@@ -305,7 +264,7 @@ PanelWindow {
                             root.activateSelected();
                             event.accepted = true;
                         } else if (event.key === Qt.Key_Escape) {
-                            root.closeLauncher();
+                            root.requestClose();
                             event.accepted = true;
                         }
                     }
