@@ -21,7 +21,7 @@ Column {
             if (!e || e.isSeparator)
                 continue;
             let ew = fm.advanceWidth(root.clean(e.text)) + Theme.menuPad * 2;
-            if (e.buttonType !== QsMenuButtonType.None || Theme.resolveIcon(e.icon))
+            if (e.buttonType !== QsMenuButtonType.None || Theme.iconCandidates(e.icon).length)
                 ew += Theme.menuRowHeight * 0.7 + Theme.spacing;
             if (e.hasChildren)
                 ew += Theme.menuRowHeight * 0.6;
@@ -101,10 +101,10 @@ Column {
                     anchors.left: parent.left
                     anchors.leftMargin: Theme.menuPad
                     anchors.verticalCenter: parent.verticalCenter
-                    readonly property string iconSource: row.entry ? Theme.resolveIcon(row.entry.icon) : ""
                     readonly property bool showCheck: !!(row.entry && row.entry.buttonType !== QsMenuButtonType.None)
+                    readonly property var iconTries: row.entry ? Theme.iconCandidates(row.entry.icon) : []
                     // Collapse the leading slot entirely when there is nothing to show.
-                    width: (showCheck || (iconSource !== "" && entryIcon.visible)) ? Theme.menuRowHeight * 0.65 : 0
+                    width: (showCheck || entryIcon.ready) ? Theme.menuRowHeight * 0.65 : 0
                     height: width
 
                     Rectangle {
@@ -127,13 +127,11 @@ Column {
                         }
                     }
 
-                    IconImage {
+                    ResolvedIcon {
                         id: entryIcon
                         anchors.centerIn: parent
-                        source: leading.iconSource
+                        candidates: leading.showCheck ? [] : leading.iconTries
                         implicitSize: Math.round(Math.max(1, parent.width || Theme.menuRowHeight * 0.65))
-                        asynchronous: true
-                        visible: !leading.showCheck && source !== "" && status === Image.Ready
                     }
                 }
 

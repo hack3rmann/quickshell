@@ -102,14 +102,11 @@ Item {
                         cursorShape: Qt.PointingHandCursor
                         acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
 
-                        IconImage {
+                        ResolvedIcon {
                             id: trayIcon
                             anchors.centerIn: parent
-                            source: Theme.resolveIcon(trayItem.modelData.icon)
+                            candidates: Theme.iconCandidates(trayItem.modelData.icon)
                             implicitSize: Math.round(Theme.barHeight * 0.85)
-                            asynchronous: true
-                            // Hide empty / failed loads — never show the missing-texture checkerboard.
-                            visible: source !== "" && status === Image.Ready
                             opacity: trayItem.containsMouse ? 1 : 0.85
                             scale: trayItem.pressed ? Theme.pressScale : (trayItem.containsMouse ? Theme.hoverScale : 1.0)
 
