@@ -2,6 +2,7 @@
 import Quickshell
 import Quickshell.Io
 import qs.launcher
+import qs.bar
 
 ShellRoot {
     id: shell
@@ -59,7 +60,7 @@ ShellRoot {
         }
     }
 
-    // One surface per screen keeps background blur attached when switching outputs.
+    // One launcher surface per screen (blur stays attached when switching outputs).
     Variants {
         model: Quickshell.screens
 
@@ -68,6 +69,16 @@ ShellRoot {
             screen: modelData
             opened: shell.launcherOpen && modelData.name === shell.focusedOutput
             onCloseRequested: shell.closeLauncher()
+        }
+    }
+
+    // Status bar on every monitor.
+    Variants {
+        model: Quickshell.screens
+
+        Bar {
+            required property var modelData
+            screen: modelData
         }
     }
 }
