@@ -7,6 +7,7 @@ Item {
     id: root
 
     property var workspaces: []
+    property int workspacesRev: 0
     property string focusedTitle: ""
     property string focusedAppId: ""
     property var keyboardNames: []
@@ -41,6 +42,12 @@ Item {
         root.focusedAppId = "";
     }
 
+    function setWorkspaces(list) {
+        root.workspaces = list || [];
+        root.workspacesRev++;
+    }
+
+    // Real workspaces on this output only (niri is dynamic — no fake I–V slots).
     function workspacesForOutput(outputName) {
         const all = root.workspaces || [];
         const filtered = [];
@@ -51,41 +58,31 @@ Item {
         filtered.sort(function (a, b) {
             return a.idx - b.idx;
         });
-
-        const byIdx = {};
-        for (let j = 0; j < filtered.length; j++)
-            byIdx[filtered[j].idx] = filtered[j];
-
-        const result = [];
-        const maxIdx = Math.max(5, filtered.length ? filtered[filtered.length - 1].idx : 5);
-        for (let idx = 1; idx <= maxIdx; idx++) {
-            if (byIdx[idx]) {
-                result.push(byIdx[idx]);
-            } else if (idx <= 5) {
-                result.push({
-                    id: -idx,
-                    idx: idx,
-                    output: outputName,
-                    is_active: false,
-                    is_focused: false,
-                    is_urgent: false,
-                    placeholder: true,
-                });
-            }
-        }
-        return result;
+        return filtered;
     }
 
+    // focus-workspace is per focused monitor — must focus the output first, sequentially.
     function focusWorkspace(ws) {
-        if (!ws || ws.placeholder)
+        if (!ws || !ws.idx)
             return;
-        if (ws.output)
-            Quickshell.execDetached(["niri", "msg", "action", "focus-monitor", ws.output]);
-        Quickshell.execDetached(["niri", "msg", "action", "focus-workspace", String(ws.idx)]);
+        const out = ws.output || "";
+        if (out) {
+            Quickshell.execDetached([
+                "bash", "-c",
+                "niri msg action focus-monitor " + JSON.stringify(out)
+                    + " && niri msg action focus-workspace " + String(ws.idx)
+            ]);
+        } else {
+            Quickshell.execDetached(["niri", "msg", "action", "focus-workspace", String(ws.idx)]);
+        }
     }
 
     function cycleLayout() {
         Quickshell.execDetached(["niri", "msg", "action", "switch-layout", "next"]);
+    }
+
+    function refreshWorkspaces() {
+        wsProbe.running = true;
     }
 
     function handleEvent(line) {
@@ -94,7 +91,10 @@ Item {
         try {
             const ev = JSON.parse(line);
             if (ev.WorkspacesChanged)
-                root.workspaces = ev.WorkspacesChanged.workspaces || [];
+                root.setWorkspaces(ev.WorkspacesChanged.workspaces || []);
+            // Mod+N switches emit this without a full WorkspacesChanged dump.
+            if (ev.WorkspaceActivated)
+                root.refreshWorkspaces();
             if (ev.WindowsChanged)
                 root.applyFocusedFromWindows(ev.WindowsChanged.windows || []);
             if (ev.WindowOpenedOrChanged && ev.WindowOpenedOrChanged.window) {
@@ -104,10 +104,8 @@ Item {
                     root.focusedAppId = w.app_id || "";
                 }
             }
-            if (ev.WindowFocusChanged) {
-                // Focus id alone — refresh from a quick focused-window probe.
+            if (ev.WindowFocusChanged)
                 winProbe.running = true;
-            }
             if (ev.KeyboardLayoutsChanged && ev.KeyboardLayoutsChanged.keyboard_layouts) {
                 const kb = ev.KeyboardLayoutsChanged.keyboard_layouts;
                 root.keyboardNames = kb.names || [];
@@ -116,7 +114,6 @@ Item {
         } catch (e) {}
     }
 
-    // Live compositor events — title/workspaces update immediately.
     Process {
         id: eventStream
         command: ["niri", "msg", "-j", "event-stream"]
@@ -127,7 +124,20 @@ Item {
         }
     }
 
-    // Fallback when only a focus id is emitted.
+    Process {
+        id: wsProbe
+        command: ["niri", "msg", "-j", "workspaces"]
+        running: false
+        stdout: StdioCollector {
+            waitForEnd: true
+            onStreamFinished: {
+                try {
+                    root.setWorkspaces(JSON.parse(text));
+                } catch (e) {}
+            }
+        }
+    }
+
     Process {
         id: winProbe
         command: ["niri", "msg", "-j", "focused-window"]
@@ -152,5 +162,8 @@ Item {
         }
     }
 
-    Component.onCompleted: winProbe.running = true
+    Component.onCompleted: {
+        wsProbe.running = true;
+        winProbe.running = true;
+    }
 }

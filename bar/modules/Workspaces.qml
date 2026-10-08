@@ -8,7 +8,11 @@ RowLayout {
     required property string outputName
 
     readonly property var roman: ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"]
-    readonly property var spaces: Niri.workspacesForOutput(root.outputName)
+    // Depend on workspacesRev so active/focus updates re-evaluate the list.
+    readonly property var spaces: {
+        Niri.workspacesRev;
+        return Niri.workspacesForOutput(root.outputName);
+    }
 
     Repeater {
         model: root.spaces
@@ -22,7 +26,9 @@ RowLayout {
             hoverEnabled: true
             onClicked: Niri.focusWorkspace(modelData)
 
-            readonly property bool active: !!(modelData.is_active || modelData.is_focused)
+            // Active on this output; focused = keyboard focus (may be on the other monitor).
+            readonly property bool active: !!modelData.is_active
+            readonly property bool focused: !!modelData.is_focused
 
             BarText {
                 id: label
@@ -34,12 +40,12 @@ RowLayout {
                 color: {
                     if (modelData.is_urgent)
                         return Theme.urgent;
-                    if (ws.active)
+                    if (ws.focused || ws.active)
                         return Theme.text;
                     return Theme.muted;
                 }
-                font.bold: ws.active
-                scale: ws.pressed ? Theme.pressScale : (ws.containsMouse ? Theme.hoverScale : (ws.active ? 1.06 : 1.0))
+                font.bold: ws.focused || ws.active
+                scale: ws.pressed ? Theme.pressScale : (ws.containsMouse ? Theme.hoverScale : (ws.focused || ws.active ? 1.06 : 1.0))
             }
         }
     }
