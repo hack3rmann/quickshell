@@ -3,8 +3,8 @@ import QtQuick
 
 QtObject {
     readonly property real uiScale: 1.8
-    // Match Waybar Crystal Clear `font-size: 99%` for even ▁/underscore advances.
-    readonly property real fontFactor: 0.99
+    // Fractional size for even ▁/underscore advances (Waybar used ~99%; trying 98%).
+    readonly property real fontFactor: 0.98
 
     readonly property string fontFamily: "JetBrains Mono Nerd Font"
     readonly property real fontSize: 12 * uiScale * fontFactor
