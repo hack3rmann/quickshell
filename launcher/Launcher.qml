@@ -32,6 +32,9 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: opened ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
+    // Frosted backdrop via ext-background-effect-v1 (supported by niri).
+    BackgroundEffect.blurRegion: root.opened ? blurRegion : null
+
     // Empty region while closed so the fullscreen overlay does not eat clicks.
     mask: root.opened ? fullMask : emptyMask
 
@@ -41,6 +44,11 @@ PanelWindow {
 
     Region {
         id: fullMask
+        item: maskCover
+    }
+
+    Region {
+        id: blurRegion
         item: maskCover
     }
 
