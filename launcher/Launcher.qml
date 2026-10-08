@@ -13,10 +13,18 @@ PanelWindow {
     property bool opened: false
     property int selectedIndex: 0
     property var results: []
+    // Grows to 2× list height once the selection reaches the 10th row.
+    property bool listExpanded: false
 
     signal closeRequested
 
     readonly property var theme: Themes.current
+    readonly property int maxVisibleRows: listExpanded ? 20 : 10
+
+    onSelectedIndexChanged: {
+        if (selectedIndex >= 9)
+            listExpanded = true;
+    }
 
     anchors {
         left: true
@@ -71,6 +79,7 @@ PanelWindow {
 
     onOpenedChanged: {
         if (opened) {
+            listExpanded = false;
             searchField.text = "";
             refreshResults();
             searchField.forceActiveFocus();
@@ -81,6 +90,7 @@ PanelWindow {
         } else {
             appsReadyRetry.stop();
             blurKick.stop();
+            listExpanded = false;
             searchField.text = "";
             searchField.focus = false;
             results = [];
@@ -193,7 +203,7 @@ PanelWindow {
         anchors.verticalCenterOffset: -parent.height * 0.08
 
         width: root.theme.width
-        height: Math.min(parent.height * 0.7, root.theme.searchHeight + root.theme.padding * 2 + root.theme.spacing + root.theme.rowHeight * Math.min(Math.max(root.results.length, 1), 10) + root.theme.borderWidth * 2)
+        height: Math.min(parent.height * 0.85, root.theme.searchHeight + root.theme.padding * 2 + root.theme.spacing + root.theme.rowHeight * Math.min(Math.max(root.results.length, 1), root.maxVisibleRows) + root.theme.borderWidth * 2)
         radius: root.theme.radius
         visible: root.opened
         opacity: root.opened ? 1 : 0
@@ -201,6 +211,13 @@ PanelWindow {
         color: root.theme.panelBg
         border.width: root.theme.borderWidth
         border.color: root.theme.panelBorder
+
+        Behavior on height {
+            NumberAnimation {
+                duration: 180
+                easing.type: Easing.OutCubic
+            }
+        }
 
         Behavior on opacity {
             NumberAnimation {
