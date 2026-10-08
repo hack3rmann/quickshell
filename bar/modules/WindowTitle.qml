@@ -103,10 +103,13 @@ Item {
                         acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
 
                         IconImage {
+                            id: trayIcon
                             anchors.centerIn: parent
-                            source: trayItem.modelData.icon
+                            source: trayItem.modelData.icon || ""
                             implicitSize: Math.round(Theme.barHeight * 0.85)
                             asynchronous: true
+                            // No broken/missing-icon placeholder — hide when empty or unloadable.
+                            visible: source !== "" && status !== Image.Error && status !== Image.Null
                             opacity: trayItem.containsMouse ? 1 : 0.85
                             scale: trayItem.pressed ? Theme.pressScale : (trayItem.containsMouse ? Theme.hoverScale : 1.0)
 

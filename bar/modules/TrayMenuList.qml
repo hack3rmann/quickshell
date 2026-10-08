@@ -21,7 +21,9 @@ Column {
             if (!e || e.isSeparator)
                 continue;
             let ew = fm.advanceWidth(root.clean(e.text)) + Theme.menuPad * 2;
-            if (e.buttonType !== QsMenuButtonType.None || (e.icon && e.icon !== ""))
+            if (e.buttonType !== QsMenuButtonType.None)
+                ew += Theme.menuRowHeight * 0.7 + Theme.spacing;
+            else if (e.icon && e.icon !== "")
                 ew += Theme.menuRowHeight * 0.7 + Theme.spacing;
             if (e.hasChildren)
                 ew += Theme.menuRowHeight * 0.6;
@@ -101,18 +103,15 @@ Column {
                     anchors.left: parent.left
                     anchors.leftMargin: Theme.menuPad
                     anchors.verticalCenter: parent.verticalCenter
-                    width: {
-                        if (!row.entry)
-                            return 0;
-                        if (row.entry.buttonType !== QsMenuButtonType.None || (row.entry.icon && row.entry.icon !== ""))
-                            return Theme.menuRowHeight * 0.65;
-                        return 0;
-                    }
+                    readonly property bool hasIcon: !!(row.entry && row.entry.icon && row.entry.icon !== "")
+                    readonly property bool showCheck: !!(row.entry && row.entry.buttonType !== QsMenuButtonType.None)
+                    // Collapse the leading slot entirely when there is nothing to show.
+                    width: (showCheck || (hasIcon && entryIcon.visible)) ? Theme.menuRowHeight * 0.65 : 0
                     height: width
 
                     Rectangle {
                         anchors.centerIn: parent
-                        visible: row.entry && row.entry.buttonType !== QsMenuButtonType.None
+                        visible: leading.showCheck
                         width: parent.width * 0.7
                         height: width
                         radius: row.entry && row.entry.buttonType === QsMenuButtonType.RadioButton ? width / 2 : 2
@@ -131,11 +130,12 @@ Column {
                     }
 
                     IconImage {
+                        id: entryIcon
                         anchors.centerIn: parent
-                        visible: row.entry && row.entry.buttonType === QsMenuButtonType.None && row.entry.icon && row.entry.icon !== ""
-                        implicitSize: Math.round(parent.width)
-                        source: row.entry ? row.entry.icon : ""
+                        source: leading.hasIcon ? row.entry.icon : ""
+                        implicitSize: Math.round(Math.max(1, parent.width))
                         asynchronous: true
+                        visible: leading.hasIcon && !leading.showCheck && status !== Image.Error && status !== Image.Null
                     }
                 }
 
