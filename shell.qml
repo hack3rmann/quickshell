@@ -4,20 +4,15 @@ import Quickshell
 import Quickshell.Io
 import qs.launcher
 import qs.bar
-import qs.power
+import qs.notifications
 
 ShellRoot {
     id: shell
 
     property bool launcherOpen: false
-    property bool powerMenuOpen: false
     property string focusedOutput: ""
-    // "launcher" | "powermenu"
-    property string pendingFocusAction: ""
 
     function openLauncher() {
-        shell.closePowerMenu();
-        shell.pendingFocusAction = "launcher";
         if (focusProbe.running)
             focusProbe.running = false;
         focusProbe.running = true;
@@ -34,25 +29,6 @@ ShellRoot {
             openLauncher();
     }
 
-    function openPowerMenu() {
-        shell.closeLauncher();
-        shell.pendingFocusAction = "powermenu";
-        if (focusProbe.running)
-            focusProbe.running = false;
-        focusProbe.running = true;
-    }
-
-    function closePowerMenu() {
-        powerMenuOpen = false;
-    }
-
-    function togglePowerMenu() {
-        if (powerMenuOpen)
-            closePowerMenu();
-        else
-            openPowerMenu();
-    }
-
     Process {
         id: focusProbe
         command: ["niri", "msg", "-j", "focused-output"]
@@ -65,11 +41,7 @@ ShellRoot {
                 } catch (e) {
                     console.warn("focused-output parse failed:", e);
                 }
-                if (shell.pendingFocusAction === "powermenu")
-                    shell.powerMenuOpen = true;
-                else
-                    shell.launcherOpen = true;
-                shell.pendingFocusAction = "";
+                shell.launcherOpen = true;
             }
         }
     }
@@ -91,18 +63,18 @@ ShellRoot {
     }
 
     IpcHandler {
-        target: "powermenu"
+        target: "notifs"
 
         function toggle(): void {
-            shell.togglePowerMenu();
+            Notifs.toggleCenter();
         }
 
-        function open(): void {
-            shell.openPowerMenu();
+        function toggleDnd(): void {
+            Notifs.toggleDnd();
         }
 
-        function close(): void {
-            shell.closePowerMenu();
+        function clear(): void {
+            Notifs.clearAll();
         }
     }
 
@@ -118,14 +90,13 @@ ShellRoot {
         }
     }
 
+    // Toast stack on every monitor.
     Variants {
         model: Quickshell.screens
 
-        PowerMenu {
+        ToastStack {
             required property var modelData
             screen: modelData
-            opened: shell.powerMenuOpen && modelData.name === shell.focusedOutput
-            onCloseRequested: shell.closePowerMenu()
         }
     }
 

@@ -73,7 +73,9 @@ PanelWindow {
             anchors.verticalCenter: parent.verticalCenter
             spacing: Theme.spacing
 
-            SwayncButton {}
+            NotifButton {
+                screenName: root.screen ? root.screen.name : ""
+            }
             Cava {}
             Sep {
                 mark: "|"

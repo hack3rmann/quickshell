@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import qs.bar
+import qs.bar.modules
 
 MouseArea {
     id: root
@@ -8,12 +9,25 @@ MouseArea {
     implicitHeight: Theme.barHeight
     cursorShape: Qt.PointingHandCursor
     hoverEnabled: true
-    onClicked: Quickshell.execDetached(["qs", "ipc", "call", "powermenu", "toggle"])
+
+    readonly property bool menuOpen: popup.isOpen
+
+    onClicked: {
+        if (popup.visible)
+            popup.close();
+        else
+            popup.open();
+    }
 
     BarText {
         id: label
         anchors.centerIn: parent
         text: "⏻"
-        scale: root.pressed ? Theme.pressScale : (root.containsMouse ? Theme.hoverScale : 1.0)
+        scale: root.pressed ? Theme.pressScale : ((root.containsMouse || root.menuOpen) ? Theme.hoverScale : 1.0)
+    }
+
+    PowerMenu {
+        id: popup
+        anchorItem: root
     }
 }

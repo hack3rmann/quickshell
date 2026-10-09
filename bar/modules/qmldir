@@ -8,7 +8,8 @@ WindowTitle 1.0 WindowTitle.qml
 TrayMenu 1.0 TrayMenu.qml
 TrayMenuList 1.0 TrayMenuList.qml
 ResolvedIcon 1.0 ResolvedIcon.qml
-SwayncButton 1.0 SwayncButton.qml
+NotifButton 1.0 NotifButton.qml
+NotificationCenter 1.0 NotificationCenter.qml
 Cava 1.0 Cava.qml
 Clock 1.0 Clock.qml
 Workspaces 1.0 Workspaces.qml
@@ -19,3 +20,4 @@ BluetoothPopup 1.0 BluetoothPopup.qml
 Audio 1.0 Audio.qml
 KeyboardLayout 1.0 KeyboardLayout.qml
 PowerButton 1.0 PowerButton.qml
+PowerMenu 1.0 PowerMenu.qml

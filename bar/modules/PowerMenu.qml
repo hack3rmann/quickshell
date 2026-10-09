@@ -1,67 +1,53 @@
 import QtQuick
-import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 import qs.bar
 
-PanelWindow {
+PopupWindow {
     id: root
 
-    property bool opened: false
+    property var anchorItem: null
+    property bool isOpen: false
 
-    signal closeRequested
-
-    readonly property real btnWidth: Math.round(140 * Theme.uiScale / 1.5)
-    readonly property real btnHeight: Math.round(120 * Theme.uiScale / 1.5)
-    readonly property real panelPad: Theme.menuPad * 2
-
-    anchors {
-        left: true
-        right: true
-        top: true
-        bottom: true
-    }
+    readonly property real btnWidth: Math.round(108 * Theme.uiScale / 1.5)
+    readonly property real btnHeight: Math.round(96 * Theme.uiScale / 1.5)
+    readonly property real panelPad: Theme.menuPad * 1.5
 
     color: "transparent"
-    exclusionMode: ExclusionMode.Ignore
-    focusable: true
-    visible: true
+    visible: false
+    grabFocus: true
 
-    WlrLayershell.namespace: "quickshell-powermenu"
-    WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: opened ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+    // Anchor under the power button; grow down + left (button sits on the right).
+    anchor.item: root.anchorItem
+    anchor.edges: Edges.Bottom | Edges.Right
+    anchor.gravity: Edges.Bottom | Edges.Left
+    anchor.adjustment: PopupAdjustment.All
+    anchor.margins.bottom: -Theme.popupGap
 
-    BackgroundEffect.blurRegion: root.opened ? blurRegion : null
+    implicitWidth: frame.implicitWidth
+    implicitHeight: frame.implicitHeight
 
-    mask: root.opened ? fullMask : emptyMask
-
-    Region {
-        id: emptyMask
-    }
-
-    Region {
-        id: fullMask
-        item: maskCover
-    }
+    BackgroundEffect.blurRegion: root.visible ? blurRegion : null
 
     Region {
         id: blurRegion
-        item: panel
+        item: frame
         radius: Theme.radius
     }
 
-    Item {
-        id: maskCover
-        anchors.fill: parent
+    function open() {
+        if (!root.anchorItem)
+            return;
+        root.visible = true;
     }
 
-    function requestClose() {
-        root.closeRequested();
+    function close() {
+        root.visible = false;
     }
 
     function runAction(argv) {
         Quickshell.execDetached(argv);
-        root.requestClose();
+        root.close();
     }
 
     readonly property var actions: [
@@ -69,34 +55,31 @@ PanelWindow {
             id: "shutdown",
             label: "Shutdown",
             icon: "⏻",
-            key: "s",
             argv: ["systemctl", "poweroff"]
         },
         {
             id: "reboot",
             label: "Reboot",
             icon: "󰜉",
-            key: "r",
             argv: ["systemctl", "reboot"]
         },
         {
             id: "logout",
             label: "Logout",
             icon: "󰍃",
-            key: "e",
             argv: ["niri", "msg", "action", "quit", "--skip-confirmation"]
         },
         {
             id: "reboot-userspace",
             label: "Reboot Userspace",
             icon: "󰑓",
-            key: "h",
             argv: ["systemctl", "soft-reboot"]
         }
     ]
 
-    onOpenedChanged: {
-        if (opened)
+    onVisibleChanged: {
+        root.isOpen = visible;
+        if (visible)
             blurKick.restart();
         else
             blurKick.stop();
@@ -107,7 +90,7 @@ PanelWindow {
         interval: 16
         repeat: false
         onTriggered: {
-            if (!root.opened)
+            if (!root.visible)
                 return;
             BackgroundEffect.blurRegion = null;
             BackgroundEffect.blurRegion = blurRegion;
@@ -116,74 +99,50 @@ PanelWindow {
 
     Shortcut {
         sequence: "Escape"
-        enabled: root.opened
-        onActivated: root.requestClose()
+        enabled: root.visible
+        onActivated: root.close()
     }
 
     Shortcut {
         sequence: "s"
-        enabled: root.opened
+        enabled: root.visible
         onActivated: root.runAction(root.actions[0].argv)
     }
 
     Shortcut {
         sequence: "r"
-        enabled: root.opened
+        enabled: root.visible
         onActivated: root.runAction(root.actions[1].argv)
     }
 
     Shortcut {
         sequence: "e"
-        enabled: root.opened
+        enabled: root.visible
         onActivated: root.runAction(root.actions[2].argv)
     }
 
     Shortcut {
         sequence: "h"
-        enabled: root.opened
+        enabled: root.visible
         onActivated: root.runAction(root.actions[3].argv)
     }
 
-    MouseArea {
-        anchors.fill: parent
-        visible: root.opened
-        onClicked: root.requestClose()
-    }
-
     Rectangle {
-        id: panel
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.verticalCenter: parent.verticalCenter
-        anchors.verticalCenterOffset: -parent.height * 0.06
-
+        id: frame
         implicitWidth: row.implicitWidth + root.panelPad * 2
         implicitHeight: row.implicitHeight + root.panelPad * 2
-        width: implicitWidth
-        height: implicitHeight
+        anchors.fill: parent
         radius: Theme.radius
-        visible: root.opened
-        opacity: root.opened ? 1 : 0
-        clip: true
         color: Theme.panelBg
         border.width: Theme.borderWidth
         border.color: Theme.panelBorder
-
-        Behavior on opacity {
-            NumberAnimation {
-                duration: Theme.animFast
-                easing.type: Easing.OutCubic
-            }
-        }
-
-        // Keep clicks on the panel from closing via the backdrop.
-        MouseArea {
-            anchors.fill: parent
-        }
+        clip: true
 
         Row {
             id: row
-            anchors.centerIn: parent
-            spacing: Theme.menuPad * 1.5
+            x: root.panelPad
+            y: root.panelPad
+            spacing: Theme.menuPad
 
             Repeater {
                 model: root.actions
@@ -221,7 +180,7 @@ PanelWindow {
                             text: modelData.icon
                             color: Theme.text
                             font.family: Theme.fontFamily
-                            font.pointSize: Theme.menuFontPointSize * 2.2
+                            font.pointSize: Theme.menuFontPointSize * 2.0
                             font.bold: true
                             scale: btn.pressed ? Theme.pressScale : (btn.containsMouse ? Theme.hoverScale : 1.0)
 
@@ -241,7 +200,7 @@ PanelWindow {
                             text: modelData.label
                             color: btn.containsMouse ? Theme.text : Theme.muted
                             font.family: Theme.fontFamily
-                            font.pointSize: Theme.menuFontPointSize
+                            font.pointSize: Theme.menuFontPointSize * 0.95
                             font.bold: true
                         }
                     }
