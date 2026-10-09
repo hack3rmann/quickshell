@@ -14,15 +14,7 @@ Item {
     readonly property bool revealTray: (hover.hovered || menuOpen) && hasTray
     property int menuOpen: 0
 
-    readonly property string titleText: {
-        const title = Niri.focusedTitle || "";
-        if (!title)
-            return "";
-        const app = Niri.focusedAppId || "";
-        if (app)
-            return app + ": " + title;
-        return title;
-    }
+    readonly property string titleText: TitleRewrite.rewrite(Niri.focusedAppId, Niri.focusedTitle)
 
     readonly property real titleNatural: label.implicitWidth + Theme.modulePadH * 2
     readonly property real trayNatural: trayRow.implicitWidth + (trayRow.implicitWidth > 0 ? Theme.spacing : 0)

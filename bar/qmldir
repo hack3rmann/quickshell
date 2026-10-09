@@ -1,5 +1,7 @@
 module bar
 singleton Theme 1.0 Theme.qml
+singleton TitleRewrite 1.0 TitleRewrite.qml
 singleton Niri 1.0 services/Niri.qml
 singleton SysStats 1.0 services/SysStats.qml
 Bar 1.0 Bar.qml
+
