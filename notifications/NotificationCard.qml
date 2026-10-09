@@ -16,6 +16,7 @@ Rectangle {
     readonly property real closeSize: Math.round((compact ? 20 : 24) * Theme.uiScale / 1.5)
     readonly property real actionHeight: compact ? Math.round(22 * Theme.uiScale / 1.5) : Theme.menuRowHeight
     readonly property bool hasActions: !!(notification && notification.actions && notification.actions.length)
+    readonly property bool bleedActions: hasActions && Notifs.actionStyle === "bleed"
 
     radius: Theme.radius
     color: Theme.panelBg
@@ -25,9 +26,9 @@ Rectangle {
     scale: hover.containsMouse ? 1.015 : 1.0
     transformOrigin: Item.Center
 
-    // Shrink-wrap to content — no artificial min height from layout stretch.
+    // Shrink-wrap; bleed style eats the bottom pad into the strip.
     implicitWidth: Math.round(360 * Theme.uiScale / 1.5)
-    implicitHeight: content.implicitHeight + cardPad * 2
+    implicitHeight: mainCol.implicitHeight + (root.bleedActions ? root.cardPad : root.cardPad * 2) + (root.bleedActions ? bleedActions.implicitHeight : 0)
     height: implicitHeight
 
     Behavior on scale {
@@ -70,7 +71,7 @@ Rectangle {
     }
 
     Column {
-        id: content
+        id: mainCol
         x: root.cardPad
         y: root.cardPad
         width: parent.width - root.cardPad * 2
@@ -79,7 +80,6 @@ Rectangle {
         RowLayout {
             width: parent.width
             spacing: Theme.menuIconGap
-            // Keep the row as tall as its children — no stretch floor.
             implicitHeight: Math.max(root.iconSize, textCol.implicitHeight, root.closeSize)
 
             ResolvedIcon {
@@ -179,87 +179,28 @@ Rectangle {
             }
         }
 
-        // Soft inset footer — groups actions by tone, not a hairline rule.
-        Rectangle {
-            id: actionFooter
-            visible: root.hasActions
+        NotificationActions {
+            visible: root.hasActions && !root.bleedActions
             width: parent.width
-            implicitHeight: actionFlow.implicitHeight + root.cardPad
             height: visible ? implicitHeight : 0
-            radius: Math.max(4, Theme.radius - 4)
-            color: Qt.rgba(1, 1, 1, 0.07)
-
-            Flow {
-                id: actionFlow
-                x: root.cardPad * 0.5
-                y: root.cardPad * 0.5
-                width: parent.width - root.cardPad
-                spacing: Math.max(4, Math.round(root.cardPad * 0.5))
-
-                Repeater {
-                    model: root.notification ? (root.notification.actions || []) : []
-
-                    MouseArea {
-                        id: act
-                        required property var modelData
-                        implicitWidth: actLabel.implicitWidth + root.cardPad * 2
-                        implicitHeight: root.actionHeight
-                        cursorShape: Qt.PointingHandCursor
-                        hoverEnabled: true
-                        onClicked: {
-                            try {
-                                modelData.invoke();
-                            } catch (e) {}
-                            root.closeRequested();
-                        }
-
-                        Rectangle {
-                            anchors.fill: parent
-                            radius: Math.max(4, Theme.radius - 4)
-                            color: act.containsMouse ? Theme.selectBg : Qt.rgba(1, 1, 1, 0.06)
-                            border.width: Math.max(1, Math.round(Theme.borderWidth * 0.75))
-                            border.color: act.containsMouse ? Theme.panelBorder : Qt.rgba(1, 1, 1, 0.18)
-
-                            Behavior on color {
-                                ColorAnimation {
-                                    duration: Theme.animFast
-                                    easing.type: Easing.OutCubic
-                                }
-                            }
-                            Behavior on border.color {
-                                ColorAnimation {
-                                    duration: Theme.animFast
-                                    easing.type: Easing.OutCubic
-                                }
-                            }
-                        }
-
-                        Text {
-                            id: actLabel
-                            anchors.centerIn: parent
-                            text: modelData.text || "Action"
-                            color: act.containsMouse ? Theme.text : Theme.muted
-                            font.family: Theme.fontFamily
-                            font.pointSize: Theme.menuFontPointSize * 0.9
-                            font.bold: true
-                            scale: act.pressed ? Theme.pressScale : 1.0
-
-                            Behavior on color {
-                                ColorAnimation {
-                                    duration: Theme.animFast
-                                    easing.type: Easing.OutCubic
-                                }
-                            }
-                            Behavior on scale {
-                                NumberAnimation {
-                                    duration: Theme.animFast
-                                    easing.type: Easing.OutCubic
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            notification: root.notification
+            cardPad: root.cardPad
+            actionHeight: root.actionHeight
+            style: Notifs.actionStyle
+            onInvoked: root.closeRequested()
         }
+    }
+
+    NotificationActions {
+        id: bleedActions
+        visible: root.bleedActions
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        notification: root.notification
+        cardPad: root.cardPad
+        actionHeight: root.actionHeight
+        style: "bleed"
+        onInvoked: root.closeRequested()
     }
 }

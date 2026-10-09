@@ -1,4 +1,5 @@
 module notifications
 ToastStack 1.0 ToastStack.qml
 NotificationCard 1.0 NotificationCard.qml
+NotificationActions 1.0 NotificationActions.qml
 NotificationCenter 1.0 NotificationCenter.qml

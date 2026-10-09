@@ -115,6 +115,12 @@ PanelWindow {
         onActivated: Notifs.clearAll()
     }
 
+    Shortcut {
+        sequence: "A"
+        enabled: root.opened
+        onActivated: Notifs.cycleActionStyle()
+    }
+
     readonly property var notifList: {
         const raw = Notifs.notifications ? (Notifs.notifications.values || []) : [];
         const list = [];
@@ -201,15 +207,27 @@ PanelWindow {
                 height: Theme.menuRowHeight
                 spacing: Theme.menuPad
 
-                Text {
-                    text: "Notifications"
-                    color: Theme.text
-                    font.family: Theme.fontFamily
-                    font.pointSize: Theme.menuFontPointSize
-                    font.bold: true
+                Column {
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignVCenter
                     Layout.leftMargin: Theme.menuPad / 2
+                    spacing: 0
+
+                    Text {
+                        text: "Notifications"
+                        color: Theme.text
+                        font.family: Theme.fontFamily
+                        font.pointSize: Theme.menuFontPointSize
+                        font.bold: true
+                    }
+
+                    Text {
+                        text: "A · " + Notifs.actionStyle
+                        color: Theme.muted
+                        font.family: Theme.fontFamily
+                        font.pointSize: Theme.menuFontPointSize * 0.75
+                        font.bold: true
+                    }
                 }
 
                 MouseArea {
