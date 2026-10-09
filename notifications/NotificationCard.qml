@@ -179,77 +179,82 @@ Rectangle {
             }
         }
 
+        // Soft inset footer — groups actions by tone, not a hairline rule.
         Rectangle {
+            id: actionFooter
             visible: root.hasActions
-            height: visible ? 1 : 0
             width: parent.width
-            color: Qt.rgba(1, 1, 1, 0.25)
-        }
-
-        Flow {
-            visible: root.hasActions
+            implicitHeight: actionFlow.implicitHeight + root.cardPad
             height: visible ? implicitHeight : 0
-            width: parent.width
-            spacing: Math.max(2, Math.round(root.cardPad * 0.4))
+            radius: Math.max(4, Theme.radius - 4)
+            color: Qt.rgba(1, 1, 1, 0.07)
 
-            Repeater {
-                model: root.notification ? (root.notification.actions || []) : []
+            Flow {
+                id: actionFlow
+                x: root.cardPad * 0.5
+                y: root.cardPad * 0.5
+                width: parent.width - root.cardPad
+                spacing: Math.max(4, Math.round(root.cardPad * 0.5))
 
-                MouseArea {
-                    id: act
-                    required property var modelData
-                    implicitWidth: actLabel.implicitWidth + root.cardPad * 2
-                    implicitHeight: root.actionHeight
-                    cursorShape: Qt.PointingHandCursor
-                    hoverEnabled: true
-                    onClicked: {
-                        try {
-                            modelData.invoke();
-                        } catch (e) {}
-                        root.closeRequested();
-                    }
+                Repeater {
+                    model: root.notification ? (root.notification.actions || []) : []
 
-                    Rectangle {
-                        anchors.fill: parent
-                        radius: Math.max(4, Theme.radius - 4)
-                        color: act.containsMouse ? Theme.selectBg : "transparent"
-                        border.width: act.containsMouse ? Math.max(1, Math.round(Theme.borderWidth * 0.75)) : 0
-                        border.color: Theme.panelBorder
+                    MouseArea {
+                        id: act
+                        required property var modelData
+                        implicitWidth: actLabel.implicitWidth + root.cardPad * 2
+                        implicitHeight: root.actionHeight
+                        cursorShape: Qt.PointingHandCursor
+                        hoverEnabled: true
+                        onClicked: {
+                            try {
+                                modelData.invoke();
+                            } catch (e) {}
+                            root.closeRequested();
+                        }
 
-                        Behavior on color {
-                            ColorAnimation {
-                                duration: Theme.animFast
-                                easing.type: Easing.OutCubic
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: Math.max(4, Theme.radius - 4)
+                            color: act.containsMouse ? Theme.selectBg : Qt.rgba(1, 1, 1, 0.06)
+                            border.width: Math.max(1, Math.round(Theme.borderWidth * 0.75))
+                            border.color: act.containsMouse ? Theme.panelBorder : Qt.rgba(1, 1, 1, 0.18)
+
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: Theme.animFast
+                                    easing.type: Easing.OutCubic
+                                }
+                            }
+                            Behavior on border.color {
+                                ColorAnimation {
+                                    duration: Theme.animFast
+                                    easing.type: Easing.OutCubic
+                                }
                             }
                         }
-                        Behavior on border.width {
-                            NumberAnimation {
-                                duration: Theme.animFast
-                                easing.type: Easing.OutCubic
-                            }
-                        }
-                    }
 
-                    Text {
-                        id: actLabel
-                        anchors.centerIn: parent
-                        text: modelData.text || "Action"
-                        color: act.containsMouse ? Theme.text : Theme.muted
-                        font.family: Theme.fontFamily
-                        font.pointSize: Theme.menuFontPointSize * 0.9
-                        font.bold: true
-                        scale: act.pressed ? Theme.pressScale : 1.0
+                        Text {
+                            id: actLabel
+                            anchors.centerIn: parent
+                            text: modelData.text || "Action"
+                            color: act.containsMouse ? Theme.text : Theme.muted
+                            font.family: Theme.fontFamily
+                            font.pointSize: Theme.menuFontPointSize * 0.9
+                            font.bold: true
+                            scale: act.pressed ? Theme.pressScale : 1.0
 
-                        Behavior on color {
-                            ColorAnimation {
-                                duration: Theme.animFast
-                                easing.type: Easing.OutCubic
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: Theme.animFast
+                                    easing.type: Easing.OutCubic
+                                }
                             }
-                        }
-                        Behavior on scale {
-                            NumberAnimation {
-                                duration: Theme.animFast
-                                easing.type: Easing.OutCubic
+                            Behavior on scale {
+                                NumberAnimation {
+                                    duration: Theme.animFast
+                                    easing.type: Easing.OutCubic
+                                }
                             }
                         }
                     }
