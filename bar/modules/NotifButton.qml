@@ -1,7 +1,5 @@
 import QtQuick
-import Quickshell
 import qs.bar
-import qs.bar.modules
 
 MouseArea {
     id: root
@@ -13,7 +11,7 @@ MouseArea {
 
     property string screenName: ""
 
-    readonly property bool menuOpen: popup.isOpen
+    readonly property bool menuOpen: Notifs.centerOpen && (!screenName || screenName === Notifs.focusedOutput)
     readonly property int count: Notifs.count
     readonly property bool dnd: Notifs.dnd
 
@@ -22,22 +20,7 @@ MouseArea {
             Notifs.toggleDnd();
             return;
         }
-        if (popup.visible)
-            popup.close();
-        else
-            popup.open();
-    }
-
-    Connections {
-        target: Notifs
-        function onCenterToggleSeqChanged() {
-            if (root.screenName && Notifs.focusedOutput && root.screenName !== Notifs.focusedOutput)
-                return;
-            if (popup.visible)
-                popup.close();
-            else
-                popup.open();
-        }
+        Notifs.toggleCenter();
     }
 
     Behavior on implicitWidth {
@@ -60,10 +43,5 @@ MouseArea {
                 icon = "󰂞";
             return root.count > 0 ? (icon + " " + root.count) : icon;
         }
-    }
-
-    NotificationCenter {
-        id: popup
-        anchorItem: root
     }
 }

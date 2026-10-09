@@ -9,6 +9,8 @@ PopupWindow {
     property var menu: null
     property var anchorItem: null
     property bool isOpen: false
+    property bool blurActive: false
+    property int blurGen: 0
 
     color: "transparent"
     visible: false
@@ -20,11 +22,15 @@ PopupWindow {
     anchor.adjustment: PopupAdjustment.All
     anchor.margins.bottom: -Theme.popupGap
 
-    implicitWidth: frame.implicitWidth
-    implicitHeight: frame.implicitHeight
+    implicitWidth: reveal.implicitWidth
+    implicitHeight: reveal.implicitHeight
 
-    // Blur only behind the menu panel (same approach as the launcher).
-    BackgroundEffect.blurRegion: root.visible ? blurRegion : null
+    BackgroundEffect.blurRegion: {
+        if (!root.blurActive)
+            return null;
+        void root.blurGen;
+        return blurRegion;
+    }
 
     Region {
         id: blurRegion
@@ -35,19 +41,28 @@ PopupWindow {
     function open() {
         if (!root.menu || !root.anchorItem)
             return;
+        closeTimer.stop();
         root.visible = true;
+        root.isOpen = true;
+        root.blurActive = true;
+        blurKick.restart();
+        reveal.show();
     }
 
     function close() {
-        root.visible = false;
+        if (!root.visible && !root.isOpen)
+            return;
+        root.isOpen = false;
+        root.blurActive = false;
+        reveal.hide();
+        closeTimer.restart();
     }
 
-    onVisibleChanged: {
-        root.isOpen = visible;
-        if (visible)
-            blurKick.restart();
-        else
-            blurKick.stop();
+    Timer {
+        id: closeTimer
+        interval: Theme.animPopup
+        repeat: false
+        onTriggered: root.visible = false
     }
 
     Timer {
@@ -55,32 +70,38 @@ PopupWindow {
         interval: 16
         repeat: false
         onTriggered: {
-            if (!root.visible)
-                return;
-            // Re-apply after layout so the region matches the panel geometry.
-            BackgroundEffect.blurRegion = null;
-            BackgroundEffect.blurRegion = blurRegion;
+            if (root.blurActive)
+                root.blurGen++;
         }
     }
 
-    Rectangle {
-        id: frame
-        implicitWidth: list.menuWidth + Theme.menuPad * 2
-        implicitHeight: Math.max(list.implicitHeight, Theme.menuRowHeight) + Theme.menuPad * 2
-        anchors.fill: parent
-        radius: Theme.radius
-        color: Theme.panelBg
-        border.width: Theme.borderWidth
-        border.color: Theme.panelBorder
-        clip: true
+    PopupReveal {
+        id: reveal
+        width: frame.implicitWidth
+        height: frame.implicitHeight
+        implicitWidth: width
+        implicitHeight: height
 
-        TrayMenuList {
-            id: list
-            x: Theme.menuPad
-            y: Theme.menuPad
-            width: list.menuWidth
-            menuHandle: root.menu
-            onActivated: root.close()
+        Rectangle {
+            id: frame
+            implicitWidth: list.menuWidth + Theme.menuPad * 2
+            implicitHeight: Math.max(list.implicitHeight, Theme.menuRowHeight) + Theme.menuPad * 2
+            width: implicitWidth
+            height: implicitHeight
+            radius: Theme.radius
+            color: Theme.panelBg
+            border.width: Theme.borderWidth
+            border.color: Theme.panelBorder
+            clip: true
+
+            TrayMenuList {
+                id: list
+                x: Theme.menuPad
+                y: Theme.menuPad
+                width: list.menuWidth
+                menuHandle: root.menu
+                onActivated: root.close()
+            }
         }
     }
 }

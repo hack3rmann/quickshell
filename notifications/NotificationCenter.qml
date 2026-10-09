@@ -5,52 +5,86 @@ import Quickshell.Wayland
 import qs.bar
 import qs.notifications
 
-PopupWindow {
+PanelWindow {
     id: root
 
-    property var anchorItem: null
-    property bool isOpen: false
+    property bool opened: false
 
-    readonly property real panelWidth: Math.round(380 * Theme.uiScale / 1.5)
+    signal closeRequested
+
+    readonly property real panelWidth: Math.round(420 * Theme.uiScale / 1.5)
     readonly property real listMaxHeight: Math.round(420 * Theme.uiScale / 1.5)
+    readonly property real stackTop: Theme.marginTop + Theme.barHeight + Theme.popupGap + Theme.menuPad
+
+    anchors {
+        left: true
+        right: true
+        top: true
+        bottom: true
+    }
 
     color: "transparent"
-    visible: false
-    grabFocus: true
+    exclusionMode: ExclusionMode.Ignore
+    focusable: true
+    visible: true
 
-    anchor.item: root.anchorItem
-    anchor.edges: Edges.Bottom | Edges.Left
-    anchor.gravity: Edges.Bottom | Edges.Right
-    anchor.adjustment: PopupAdjustment.All
-    anchor.margins.bottom: -Theme.popupGap
+    WlrLayershell.namespace: "quickshell-notif-center"
+    WlrLayershell.layer: WlrLayer.Overlay
+    WlrLayershell.keyboardFocus: opened ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
-    implicitWidth: frame.implicitWidth
-    implicitHeight: frame.implicitHeight
+    // Blur/mask only while open. Binding-only — JS assign breaks blur after first close.
+    property int blurGen: 0
+    BackgroundEffect.blurRegion: {
+        if (!root.opened)
+            return null;
+        void root.blurGen;
+        return blurRegion;
+    }
+    mask: root.opened ? fullMask : emptyMask
 
-    BackgroundEffect.blurRegion: root.visible ? blurRegion : null
+    Region {
+        id: emptyMask
+    }
+
+    Region {
+        id: fullMask
+        item: maskCover
+    }
 
     Region {
         id: blurRegion
-        item: frame
+        item: panel
         radius: Theme.radius
     }
 
-    function open() {
-        if (!root.anchorItem)
-            return;
-        root.visible = true;
+    Item {
+        id: maskCover
+        anchors.fill: parent
     }
 
-    function close() {
-        root.visible = false;
+    function requestClose() {
+        root.closeRequested();
     }
 
-    onVisibleChanged: {
-        root.isOpen = visible;
-        if (visible)
+    onOpenedChanged: {
+        if (opened) {
             blurKick.restart();
-        else
-            blurKick.stop();
+            syncCenterHeight();
+        } else {
+            Notifs.centerPanelHeight = 0;
+        }
+    }
+
+    function syncCenterHeight() {
+        Notifs.centerPanelHeight = panel.height;
+    }
+
+    Connections {
+        target: panel
+        function onHeightChanged() {
+            if (root.opened)
+                root.syncCenterHeight();
+        }
     }
 
     Timer {
@@ -58,17 +92,15 @@ PopupWindow {
         interval: 16
         repeat: false
         onTriggered: {
-            if (!root.visible)
-                return;
-            BackgroundEffect.blurRegion = null;
-            BackgroundEffect.blurRegion = blurRegion;
+            if (root.opened)
+                root.blurGen++;
         }
     }
 
     Shortcut {
         sequence: "Escape"
-        enabled: root.visible
-        onActivated: root.close()
+        enabled: root.opened
+        onActivated: root.requestClose()
     }
 
     readonly property var notifList: {
@@ -76,21 +108,74 @@ PopupWindow {
         const list = [];
         for (let i = 0; i < raw.length; i++)
             list.push(raw[i]);
-        // Newest first.
         list.reverse();
         return list;
     }
 
+    MouseArea {
+        anchors.fill: parent
+        enabled: root.opened
+        visible: root.opened
+        opacity: root.opened ? 1 : 0
+        onClicked: root.requestClose()
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: Theme.animFast
+                easing.type: Easing.OutCubic
+            }
+        }
+    }
+
     Rectangle {
-        id: frame
+        id: panel
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        anchors.topMargin: root.stackTop + (root.opened ? 0 : -20)
+
         implicitWidth: root.panelWidth
         implicitHeight: contentCol.implicitHeight + Theme.menuPad * 2
-        anchors.fill: parent
+        width: implicitWidth
+        height: implicitHeight
         radius: Theme.radius
+        opacity: root.opened ? 1 : 0
+        scale: root.opened ? 1 : 0.96
+        transformOrigin: Item.Top
+        clip: true
         color: Theme.panelBg
         border.width: Theme.borderWidth
         border.color: Theme.panelBorder
-        clip: true
+        // Keep hittable only while open.
+        enabled: root.opened
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: Theme.animNormal
+                easing.type: Easing.OutCubic
+            }
+        }
+        Behavior on anchors.topMargin {
+            NumberAnimation {
+                duration: Theme.animNormal
+                easing.type: Easing.OutCubic
+            }
+        }
+        Behavior on scale {
+            NumberAnimation {
+                duration: Theme.animNormal
+                easing.type: Easing.OutCubic
+            }
+        }
+        Behavior on implicitHeight {
+            NumberAnimation {
+                duration: Theme.animNormal
+                easing.type: Easing.OutCubic
+            }
+        }
+
+        MouseArea {
+            anchors.fill: parent
+        }
 
         Column {
             id: contentCol
@@ -129,6 +214,19 @@ PopupWindow {
                         color: dndBtn.containsMouse || Notifs.dnd ? Theme.selectBg : "transparent"
                         border.width: dndBtn.containsMouse ? Math.max(1, Math.round(Theme.borderWidth * 0.75)) : 0
                         border.color: Theme.panelBorder
+
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: Theme.animFast
+                                easing.type: Easing.OutCubic
+                            }
+                        }
+                        Behavior on border.width {
+                            NumberAnimation {
+                                duration: Theme.animFast
+                                easing.type: Easing.OutCubic
+                            }
+                        }
                     }
 
                     Text {
@@ -139,6 +237,20 @@ PopupWindow {
                         font.family: Theme.fontFamily
                         font.pointSize: Theme.menuFontPointSize
                         font.bold: true
+                        scale: dndBtn.pressed ? Theme.pressScale : 1.0
+
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: Theme.animFast
+                                easing.type: Easing.OutCubic
+                            }
+                        }
+                        Behavior on scale {
+                            NumberAnimation {
+                                duration: Theme.animFast
+                                easing.type: Easing.OutCubic
+                            }
+                        }
                     }
                 }
 
@@ -158,6 +270,25 @@ PopupWindow {
                         border.width: clearBtn.containsMouse ? Math.max(1, Math.round(Theme.borderWidth * 0.75)) : 0
                         border.color: Theme.panelBorder
                         opacity: clearBtn.enabled ? 1 : 0.45
+
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: Theme.animFast
+                                easing.type: Easing.OutCubic
+                            }
+                        }
+                        Behavior on border.width {
+                            NumberAnimation {
+                                duration: Theme.animFast
+                                easing.type: Easing.OutCubic
+                            }
+                        }
+                        Behavior on opacity {
+                            NumberAnimation {
+                                duration: Theme.animFast
+                                easing.type: Easing.OutCubic
+                            }
+                        }
                     }
 
                     Text {
@@ -168,6 +299,20 @@ PopupWindow {
                         font.family: Theme.fontFamily
                         font.pointSize: Theme.menuFontPointSize
                         font.bold: true
+                        scale: clearBtn.pressed ? Theme.pressScale : 1.0
+
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: Theme.animFast
+                                easing.type: Easing.OutCubic
+                            }
+                        }
+                        Behavior on scale {
+                            NumberAnimation {
+                                duration: Theme.animFast
+                                easing.type: Easing.OutCubic
+                            }
+                        }
                     }
                 }
             }
@@ -187,6 +332,13 @@ PopupWindow {
                 boundsBehavior: Flickable.StopAtBounds
                 flickableDirection: Flickable.VerticalFlick
 
+                Behavior on height {
+                    NumberAnimation {
+                        duration: Theme.animNormal
+                        easing.type: Easing.OutCubic
+                    }
+                }
+
                 Column {
                     id: listCol
                     width: flick.width
@@ -195,6 +347,7 @@ PopupWindow {
                     Text {
                         visible: root.notifList.length === 0
                         width: parent.width
+                        opacity: visible ? 1 : 0
                         text: "No notifications"
                         color: Theme.muted
                         font.family: Theme.fontFamily
@@ -203,6 +356,13 @@ PopupWindow {
                         leftPadding: Theme.menuPad / 2
                         topPadding: Theme.menuPad / 2
                         bottomPadding: Theme.menuPad / 2
+
+                        Behavior on opacity {
+                            NumberAnimation {
+                                duration: Theme.animFast
+                                easing.type: Easing.OutCubic
+                            }
+                        }
                     }
 
                     Repeater {

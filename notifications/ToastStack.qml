@@ -7,74 +7,116 @@ import qs.notifications
 PanelWindow {
     id: root
 
-    // Active toast notifications (Notification objects), newest last for stacking.
-    property var toasts: []
-
-    readonly property real stackMargin: Theme.marginH
-    readonly property real stackTop: Theme.marginTop + Theme.barHeight + Theme.popupGap + Theme.menuPad
+    readonly property real toastWidth: Math.round(380 * Theme.uiScale / 1.5)
+    readonly property real baseTop: Theme.marginTop + Theme.barHeight + Theme.popupGap + Theme.menuPad
+    readonly property real stackTop: root.baseTop + (Notifs.centerOpen && Notifs.centerPanelHeight > 0 ? Notifs.centerPanelHeight + Theme.menuPad : 0)
 
     anchors {
-        top: true
+        left: true
         right: true
+        top: true
     }
 
     margins {
         top: root.stackTop
-        right: root.stackMargin
     }
 
-    implicitWidth: Math.round(380 * Theme.uiScale / 1.5)
-    implicitHeight: col.implicitHeight
+    Behavior on margins.top {
+        NumberAnimation {
+            duration: Theme.animPopup
+            easing.type: Easing.OutCubic
+        }
+    }
+
+    implicitHeight: Math.max(col.implicitHeight, 1)
     color: "transparent"
     exclusionMode: ExclusionMode.Ignore
-    visible: toasts.length > 0
+    visible: toastModel.count > 0
+
+    // Binding-only blur — never assign BackgroundEffect.blurRegion in JS.
+    property int blurGen: 0
+    BackgroundEffect.blurRegion: {
+        if (toastModel.count <= 0)
+            return null;
+        void root.blurGen;
+        return blurRegion;
+    }
 
     WlrLayershell.namespace: "quickshell-toasts"
     WlrLayershell.layer: WlrLayer.Overlay
 
-    BackgroundEffect.blurRegion: root.visible && toasts.length ? blurRegion : null
+    mask: toastModel.count > 0 ? toastMask : emptyMask
+
+    Region {
+        id: emptyMask
+    }
+
+    Region {
+        id: toastMask
+        item: col
+    }
 
     Region {
         id: blurRegion
         item: col
-        // Approximate; cards have their own radius.
         radius: Theme.radius
+    }
+
+    ListModel {
+        id: toastModel
+    }
+
+    function indexOfNotif(notif) {
+        if (!notif)
+            return -1;
+        for (let i = 0; i < toastModel.count; i++) {
+            const n = toastModel.get(i).notification;
+            if (n === notif || (n && notif && n.id === notif.id))
+                return i;
+        }
+        return -1;
     }
 
     function pushToast(notif) {
         if (!notif)
             return;
-        const next = root.toasts.slice();
-        // Dedupe by id if replaced.
-        const id = notif.id;
-        for (let i = next.length - 1; i >= 0; i--) {
-            if (next[i] && next[i].id === id)
-                next.splice(i, 1);
-        }
-        next.push(notif);
-        // Cap stack size.
-        while (next.length > 5)
-            next.shift();
-        root.toasts = next;
-        blurKick.restart();
+        const existing = root.indexOfNotif(notif);
+        if (existing >= 0)
+            toastModel.remove(existing);
+        toastModel.append({
+            notification: notif
+        });
+        while (toastModel.count > 5)
+            toastModel.remove(0);
+        root.blurGen++;
+    }
+
+    function removeAt(index) {
+        if (index < 0 || index >= toastModel.count)
+            return;
+        toastModel.remove(index);
+        root.blurGen++;
     }
 
     function removeToast(notif) {
-        const next = [];
-        for (let i = 0; i < root.toasts.length; i++) {
-            if (root.toasts[i] !== notif && !(notif && root.toasts[i] && root.toasts[i].id === notif.id))
-                next.push(root.toasts[i]);
-        }
-        root.toasts = next;
+        root.removeAt(root.indexOfNotif(notif));
     }
 
     function dismissToast(notif) {
-        root.removeToast(notif);
+        const idx = root.indexOfNotif(notif);
+        if (idx >= 0)
+            root.removeAt(idx);
         if (notif) {
             try {
                 notif.dismiss();
             } catch (e) {}
         }
+    }
+
+    // Toast timeout only hides the popup. The notification stays tracked in the
+    // center until the user dismisses it (GNOME/swaync-style persistence).
+    function hideToast(notif) {
+        root.removeToast(notif);
     }
 
     Connections {
@@ -84,64 +126,74 @@ PanelWindow {
         }
     }
 
-    Timer {
-        id: blurKick
-        interval: 16
-        repeat: false
-        onTriggered: {
-            if (!root.visible)
-                return;
-            BackgroundEffect.blurRegion = null;
-            BackgroundEffect.blurRegion = blurRegion;
-        }
-    }
-
     Column {
         id: col
-        width: parent.width
+        anchors.horizontalCenter: parent.horizontalCenter
+        width: root.toastWidth
         spacing: Theme.menuPad
 
-        Repeater {
-            model: root.toasts
+        // ListModel keeps sibling delegates alive — only the changed row animates.
+        add: Transition {
+            SequentialAnimation {
+                PropertyAction {
+                    property: "opacity"
+                    value: 0
+                }
+                PropertyAction {
+                    property: "scale"
+                    value: Theme.toastScaleFrom
+                }
+                ParallelAnimation {
+                    NumberAnimation {
+                        property: "opacity"
+                        to: 1
+                        duration: Theme.animToast
+                        easing.type: Easing.OutBack
+                    }
+                    NumberAnimation {
+                        property: "scale"
+                        to: 1
+                        duration: Theme.animToast
+                        easing.type: Easing.OutBack
+                    }
+                }
+            }
+        }
 
-            Item {
-                id: wrap
-                required property var modelData
+        move: Transition {
+            NumberAnimation {
+                properties: "y"
+                duration: Theme.animToast
+                easing.type: Easing.OutCubic
+            }
+        }
+
+        Repeater {
+            model: toastModel
+
+            NotificationCard {
+                id: card
+                required property var model
                 required property int index
                 width: col.width
-                height: card.implicitHeight
+                notification: model.notification
+                compact: true
+                transformOrigin: Item.Top
 
-                NotificationCard {
-                    id: card
-                    width: parent.width
-                    notification: wrap.modelData
-                    compact: true
-                    onDismissRequested: root.dismissToast(wrap.modelData)
-                    onCloseRequested: root.removeToast(wrap.modelData)
-                }
+                onDismissRequested: root.dismissToast(model.notification)
+                onCloseRequested: root.removeToast(model.notification)
 
                 Timer {
-                    interval: Notifs.timeoutMsFor(wrap.modelData)
-                    running: interval > 0 && !!wrap.modelData
+                    interval: Notifs.timeoutMsFor(card.notification)
+                    running: interval > 0 && !!card.notification
                     repeat: false
-                    onTriggered: {
-                        root.removeToast(wrap.modelData);
-                        if (wrap.modelData) {
-                            try {
-                                wrap.modelData.expire();
-                            } catch (e) {
-                                try {
-                                    wrap.modelData.dismiss();
-                                } catch (e2) {}
-                            }
-                        }
-                    }
+                    onTriggered: root.hideToast(card.notification)
                 }
 
                 Connections {
-                    target: wrap.modelData
+                    target: card.notification
                     function onClosed() {
-                        root.removeToast(wrap.modelData);
+                        root.removeToast(card.notification);
                     }
                 }
             }

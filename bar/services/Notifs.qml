@@ -8,9 +8,10 @@ Item {
     id: root
 
     property bool dnd: false
+    property bool centerOpen: false
     property string focusedOutput: ""
-    // Bumped when Mod+Shift+N / IPC asks the bar bell to toggle the center.
-    property int centerToggleSeq: 0
+    // Live height of the open notification-center panel (0 when closed).
+    property real centerPanelHeight: 0
 
     readonly property var notifications: server.trackedNotifications
     readonly property int count: {
@@ -42,7 +43,6 @@ Item {
 
     function clearAll() {
         const vals = server.trackedNotifications ? (server.trackedNotifications.values || []) : [];
-        // Copy first — dismissing mutates the model.
         const list = [];
         for (let i = 0; i < vals.length; i++)
             list.push(vals[i]);
@@ -57,10 +57,21 @@ Item {
         root.dnd = !root.dnd;
     }
 
-    function toggleCenter() {
+    function closeCenter() {
+        root.centerOpen = false;
+    }
+
+    function openCenter() {
         if (focusProbe.running)
             focusProbe.running = false;
         focusProbe.running = true;
+    }
+
+    function toggleCenter() {
+        if (root.centerOpen)
+            root.closeCenter();
+        else
+            root.openCenter();
     }
 
     Process {
@@ -75,7 +86,7 @@ Item {
                 } catch (e) {
                     console.warn("notifs focused-output parse failed:", e);
                 }
-                root.centerToggleSeq++;
+                root.centerOpen = true;
             }
         }
     }
@@ -83,12 +94,11 @@ Item {
     function timeoutMsFor(notif) {
         if (!notif)
             return 6000;
-        // Respect client timeout when provided (>0). -1 / 0 often means default / never.
         const t = notif.expireTimeout;
         if (typeof t === "number" && t > 0)
             return Math.round(t * 1000);
         if (notif.urgency === NotificationUrgency.Critical)
-            return 0; // no auto-expire
+            return 0;
         if (notif.urgency === NotificationUrgency.Low)
             return 3000;
         return 6000;

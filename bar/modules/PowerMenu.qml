@@ -27,7 +27,14 @@ PopupWindow {
     implicitWidth: frame.implicitWidth
     implicitHeight: frame.implicitHeight
 
-    BackgroundEffect.blurRegion: root.visible ? blurRegion : null
+    property bool blurActive: false
+    property int blurGen: 0
+    BackgroundEffect.blurRegion: {
+        if (!root.blurActive)
+            return null;
+        void root.blurGen;
+        return blurRegion;
+    }
 
     Region {
         id: blurRegion
@@ -38,16 +45,43 @@ PopupWindow {
     function open() {
         if (!root.anchorItem)
             return;
+        closeTimer.stop();
         root.visible = true;
+        root.isOpen = true;
+        root.blurActive = true;
+        blurKick.restart();
+        reveal.show();
     }
 
     function close() {
-        root.visible = false;
+        if (!root.visible && !root.isOpen)
+            return;
+        root.isOpen = false;
+        root.blurActive = false;
+        reveal.hide();
+        closeTimer.restart();
     }
 
     function runAction(argv) {
         Quickshell.execDetached(argv);
         root.close();
+    }
+
+    Timer {
+        id: closeTimer
+        interval: Theme.animPopup
+        repeat: false
+        onTriggered: root.visible = false
+    }
+
+    Timer {
+        id: blurKick
+        interval: 16
+        repeat: false
+        onTriggered: {
+            if (root.blurActive)
+                root.blurGen++;
+        }
     }
 
     readonly property var actions: [
@@ -76,26 +110,6 @@ PopupWindow {
             argv: ["systemctl", "soft-reboot"]
         }
     ]
-
-    onVisibleChanged: {
-        root.isOpen = visible;
-        if (visible)
-            blurKick.restart();
-        else
-            blurKick.stop();
-    }
-
-    Timer {
-        id: blurKick
-        interval: 16
-        repeat: false
-        onTriggered: {
-            if (!root.visible)
-                return;
-            BackgroundEffect.blurRegion = null;
-            BackgroundEffect.blurRegion = blurRegion;
-        }
-    }
 
     Shortcut {
         sequence: "Escape"
@@ -127,22 +141,30 @@ PopupWindow {
         onActivated: root.runAction(root.actions[3].argv)
     }
 
-    Rectangle {
-        id: frame
-        implicitWidth: row.implicitWidth + root.panelPad * 2
-        implicitHeight: row.implicitHeight + root.panelPad * 2
-        anchors.fill: parent
-        radius: Theme.radius
-        color: Theme.panelBg
-        border.width: Theme.borderWidth
-        border.color: Theme.panelBorder
-        clip: true
+    PopupReveal {
+        id: reveal
+        width: frame.implicitWidth
+        height: frame.implicitHeight
+        implicitWidth: width
+        implicitHeight: height
 
-        Row {
-            id: row
-            x: root.panelPad
-            y: root.panelPad
-            spacing: Theme.menuPad
+        Rectangle {
+            id: frame
+            implicitWidth: row.implicitWidth + root.panelPad * 2
+            implicitHeight: row.implicitHeight + root.panelPad * 2
+            width: implicitWidth
+            height: implicitHeight
+            radius: Theme.radius
+            color: Theme.panelBg
+            border.width: Theme.borderWidth
+            border.color: Theme.panelBorder
+            clip: true
+
+            Row {
+                id: row
+                x: root.panelPad
+                y: root.panelPad
+                spacing: Theme.menuPad
 
             Repeater {
                 model: root.actions
@@ -206,6 +228,7 @@ PopupWindow {
                     }
                 }
             }
+        }
         }
     }
 }

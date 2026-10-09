@@ -19,9 +19,37 @@ Rectangle {
     border.width: Theme.borderWidth
     border.color: Theme.panelBorder
     clip: true
+    scale: hover.containsMouse ? 1.015 : 1.0
+    transformOrigin: Item.Center
 
     implicitWidth: Math.round(360 * Theme.uiScale / 1.5)
     implicitHeight: content.implicitHeight + cardPad * 2
+
+    Behavior on scale {
+        NumberAnimation {
+            duration: Theme.animFast
+            easing.type: Easing.OutCubic
+        }
+    }
+
+    HoverHandler {
+        id: hover
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        radius: parent.radius
+        color: Theme.selectBg
+        opacity: hover.containsMouse ? 1 : 0
+        z: -1
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: Theme.animFast
+                easing.type: Easing.OutCubic
+            }
+        }
+    }
 
     function iconCandidates() {
         const n = root.notification;
@@ -86,7 +114,6 @@ Rectangle {
                     width: parent.width
                     text: {
                         const b = root.notification ? (root.notification.body || "") : "";
-                        // Strip simple markup for display.
                         return String(b).replace(/<[^>]+>/g, "");
                     }
                     textFormat: Text.PlainText
@@ -116,11 +143,24 @@ Rectangle {
                     font.family: Theme.fontFamily
                     font.pointSize: Theme.menuFontPointSize
                     font.bold: true
+                    scale: closeBtn.pressed ? Theme.pressScale : (closeBtn.containsMouse ? Theme.hoverScale : 1.0)
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: Theme.animFast
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+                    Behavior on scale {
+                        NumberAnimation {
+                            duration: Theme.animFast
+                            easing.type: Easing.OutCubic
+                        }
+                    }
                 }
             }
         }
 
-        // Actions
         Flow {
             visible: !!(root.notification && root.notification.actions && root.notification.actions.length)
             width: parent.width
@@ -149,6 +189,19 @@ Rectangle {
                         color: act.containsMouse ? Theme.selectBg : "transparent"
                         border.width: act.containsMouse ? Math.max(1, Math.round(Theme.borderWidth * 0.75)) : 0
                         border.color: Theme.panelBorder
+
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: Theme.animFast
+                                easing.type: Easing.OutCubic
+                            }
+                        }
+                        Behavior on border.width {
+                            NumberAnimation {
+                                duration: Theme.animFast
+                                easing.type: Easing.OutCubic
+                            }
+                        }
                     }
 
                     Text {
@@ -159,6 +212,20 @@ Rectangle {
                         font.family: Theme.fontFamily
                         font.pointSize: Theme.menuFontPointSize * 0.9
                         font.bold: true
+                        scale: act.pressed ? Theme.pressScale : 1.0
+
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: Theme.animFast
+                                easing.type: Easing.OutCubic
+                            }
+                        }
+                        Behavior on scale {
+                            NumberAnimation {
+                                duration: Theme.animFast
+                                easing.type: Easing.OutCubic
+                            }
+                        }
                     }
                 }
             }

@@ -28,7 +28,15 @@ PopupWindow {
     implicitWidth: frame.implicitWidth
     implicitHeight: frame.implicitHeight
 
-    BackgroundEffect.blurRegion: root.visible ? blurRegion : null
+    property bool blurActive: false
+    property int blurGen: 0
+    // Binding only — assigning BackgroundEffect.blurRegion in JS breaks it after first open.
+    BackgroundEffect.blurRegion: {
+        if (!root.blurActive)
+            return null;
+        void root.blurGen;
+        return blurRegion;
+    }
 
     Region {
         id: blurRegion
@@ -39,21 +47,30 @@ PopupWindow {
     function open() {
         if (!root.anchorItem)
             return;
+        closeTimer.stop();
         root.visible = true;
+        root.isOpen = true;
+        root.blurActive = true;
+        blurKick.restart();
+        reveal.show();
     }
 
     function close() {
+        if (!root.visible && !root.isOpen)
+            return;
         if (root.adapter && root.adapter.discovering)
             root.adapter.discovering = false;
-        root.visible = false;
+        root.isOpen = false;
+        root.blurActive = false;
+        reveal.hide();
+        closeTimer.restart();
     }
 
-    onVisibleChanged: {
-        root.isOpen = visible;
-        if (visible)
-            blurKick.restart();
-        else
-            blurKick.stop();
+    Timer {
+        id: closeTimer
+        interval: Theme.animPopup
+        repeat: false
+        onTriggered: root.visible = false
     }
 
     Timer {
@@ -61,10 +78,8 @@ PopupWindow {
         interval: 16
         repeat: false
         onTriggered: {
-            if (!root.visible)
-                return;
-            BackgroundEffect.blurRegion = null;
-            BackgroundEffect.blurRegion = blurRegion;
+            if (root.blurActive)
+                root.blurGen++;
         }
     }
 
@@ -115,23 +130,31 @@ PopupWindow {
         dev.connect();
     }
 
-    Rectangle {
-        id: frame
-        implicitWidth: root.panelWidth
-        implicitHeight: contentCol.implicitHeight + Theme.menuPad * 2
-        anchors.fill: parent
-        radius: Theme.radius
-        color: Theme.panelBg
-        border.width: Theme.borderWidth
-        border.color: Theme.panelBorder
-        clip: true
+    PopupReveal {
+        id: reveal
+        width: frame.implicitWidth
+        height: frame.implicitHeight
+        implicitWidth: width
+        implicitHeight: height
 
-        Column {
-            id: contentCol
-            x: Theme.menuPad
-            y: Theme.menuPad
-            width: root.panelWidth - Theme.menuPad * 2
-            spacing: Theme.menuPad * 1.5
+        Rectangle {
+            id: frame
+            implicitWidth: root.panelWidth
+            implicitHeight: contentCol.implicitHeight + Theme.menuPad * 2
+            width: implicitWidth
+            height: implicitHeight
+            radius: Theme.radius
+            color: Theme.panelBg
+            border.width: Theme.borderWidth
+            border.color: Theme.panelBorder
+            clip: true
+
+            Column {
+                id: contentCol
+                x: Theme.menuPad
+                y: Theme.menuPad
+                width: root.panelWidth - Theme.menuPad * 2
+                spacing: Theme.menuPad * 1.5
 
             // Header
             RowLayout {
@@ -401,6 +424,7 @@ PopupWindow {
                     }
                 }
             }
+        }
         }
     }
 }

@@ -179,6 +179,14 @@ QtObject {
     readonly property int animSlow: 420
     readonly property int animDrawer: 500
     readonly property int animCavaBar: 55
+    // Shared popup open/close (notification center chrome).
+    readonly property int animPopup: 260
+    readonly property real popupSlide: 16
+    readonly property real popupScaleFrom: 0.96
+    // Toast card enter/exit — short punch, not a slow drift.
+    readonly property int animToast: 160
+    readonly property real toastSlide: 10
+    readonly property real toastScaleFrom: 0.88
     readonly property real hoverScale: 1.12
     readonly property real pressScale: 0.92
 }

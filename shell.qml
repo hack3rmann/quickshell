@@ -90,13 +90,25 @@ ShellRoot {
         }
     }
 
-    // Toast stack on every monitor.
+    // Toast stack on every monitor (top-center under the bar).
     Variants {
         model: Quickshell.screens
 
         ToastStack {
             required property var modelData
             screen: modelData
+        }
+    }
+
+    // Notification center centered under the bar on the focused output.
+    Variants {
+        model: Quickshell.screens
+
+        NotificationCenter {
+            required property var modelData
+            screen: modelData
+            opened: Notifs.centerOpen && modelData.name === Notifs.focusedOutput
+            onCloseRequested: Notifs.closeCenter()
         }
     }
 
