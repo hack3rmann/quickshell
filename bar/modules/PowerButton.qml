@@ -8,7 +8,7 @@ MouseArea {
     implicitHeight: Theme.barHeight
     cursorShape: Qt.PointingHandCursor
     hoverEnabled: true
-    onClicked: Quickshell.execDetached([Quickshell.env("HOME") + "/.config/hypr/scripts/Wlogout.sh"])
+    onClicked: Quickshell.execDetached(["qs", "ipc", "call", "powermenu", "toggle"])
 
     BarText {
         id: label

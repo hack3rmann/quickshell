@@ -4,14 +4,20 @@ import Quickshell
 import Quickshell.Io
 import qs.launcher
 import qs.bar
+import qs.power
 
 ShellRoot {
     id: shell
 
     property bool launcherOpen: false
+    property bool powerMenuOpen: false
     property string focusedOutput: ""
+    // "launcher" | "powermenu"
+    property string pendingFocusAction: ""
 
     function openLauncher() {
+        shell.closePowerMenu();
+        shell.pendingFocusAction = "launcher";
         if (focusProbe.running)
             focusProbe.running = false;
         focusProbe.running = true;
@@ -28,6 +34,25 @@ ShellRoot {
             openLauncher();
     }
 
+    function openPowerMenu() {
+        shell.closeLauncher();
+        shell.pendingFocusAction = "powermenu";
+        if (focusProbe.running)
+            focusProbe.running = false;
+        focusProbe.running = true;
+    }
+
+    function closePowerMenu() {
+        powerMenuOpen = false;
+    }
+
+    function togglePowerMenu() {
+        if (powerMenuOpen)
+            closePowerMenu();
+        else
+            openPowerMenu();
+    }
+
     Process {
         id: focusProbe
         command: ["niri", "msg", "-j", "focused-output"]
@@ -40,7 +65,11 @@ ShellRoot {
                 } catch (e) {
                     console.warn("focused-output parse failed:", e);
                 }
-                shell.launcherOpen = true;
+                if (shell.pendingFocusAction === "powermenu")
+                    shell.powerMenuOpen = true;
+                else
+                    shell.launcherOpen = true;
+                shell.pendingFocusAction = "";
             }
         }
     }
@@ -61,6 +90,22 @@ ShellRoot {
         }
     }
 
+    IpcHandler {
+        target: "powermenu"
+
+        function toggle(): void {
+            shell.togglePowerMenu();
+        }
+
+        function open(): void {
+            shell.openPowerMenu();
+        }
+
+        function close(): void {
+            shell.closePowerMenu();
+        }
+    }
+
     // One launcher surface per screen (blur stays attached when switching outputs).
     Variants {
         model: Quickshell.screens
@@ -70,6 +115,17 @@ ShellRoot {
             screen: modelData
             opened: shell.launcherOpen && modelData.name === shell.focusedOutput
             onCloseRequested: shell.closeLauncher()
+        }
+    }
+
+    Variants {
+        model: Quickshell.screens
+
+        PowerMenu {
+            required property var modelData
+            screen: modelData
+            opened: shell.powerMenuOpen && modelData.name === shell.focusedOutput
+            onCloseRequested: shell.closePowerMenu()
         }
     }
 
