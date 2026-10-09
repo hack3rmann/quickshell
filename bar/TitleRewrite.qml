@@ -3,6 +3,7 @@ import QtQuick
 
 QtObject {
     // Port of waybruh window-title.slint replace-title / replace-firefox / replace-obsidian.
+    // Use regex/split — QML's JS engine has no String.replaceAll.
     function rewrite(appId, title) {
         const id = String(appId || "");
         const t = String(title || "");
@@ -28,11 +29,11 @@ QtObject {
 
     function replaceFirefox(title) {
         let s = String(title);
-        s = s.replaceAll(" — Mozilla Firefox", "");
-        s = s.replaceAll("Mozilla Firefox", "");
+        s = s.replace(/ — Mozilla Firefox/g, "");
+        s = s.replace(/Mozilla Firefox/g, "");
 
         if (s.indexOf(" - YouTube") >= 0) {
-            const youtubeRemoved = s.replaceAll(" - YouTube", "").trim();
+            const youtubeRemoved = s.replace(/ - YouTube/g, "").trim();
             return "  " + youtubeRemoved;
         }
 
@@ -40,7 +41,7 @@ QtObject {
             return " ";
 
         if (s.indexOf(" at DuckDuckGo") >= 0) {
-            const ddgRemoved = s.replaceAll(" at DuckDuckGo", "").trim();
+            const ddgRemoved = s.replace(/ at DuckDuckGo/g, "").trim();
             return "  " + ddgRemoved;
         }
 
