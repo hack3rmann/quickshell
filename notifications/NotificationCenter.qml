@@ -326,7 +326,7 @@ PanelWindow {
             Flickable {
                 id: flick
                 width: parent.width
-                height: Math.min(Math.max(listCol.implicitHeight, Theme.menuRowHeight), root.listMaxHeight)
+                height: Math.min(listCol.implicitHeight, root.listMaxHeight)
                 contentHeight: listCol.implicitHeight
                 clip: true
                 boundsBehavior: Flickable.StopAtBounds
@@ -334,7 +334,7 @@ PanelWindow {
 
                 Behavior on height {
                     NumberAnimation {
-                        duration: Theme.animNormal
+                        duration: Theme.animPopup
                         easing.type: Easing.OutCubic
                     }
                 }

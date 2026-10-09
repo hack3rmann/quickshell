@@ -11,8 +11,10 @@ Rectangle {
     signal dismissRequested
     signal closeRequested
 
-    readonly property real cardPad: Theme.menuPad
-    readonly property real iconSize: Math.round(Theme.menuRowHeight * (compact ? 1.1 : 1.4))
+    readonly property real cardPad: compact ? Math.max(6, Math.round(Theme.menuPad * 0.7)) : Theme.menuPad
+    readonly property real iconSize: Math.round((compact ? 18 : 24) * Theme.uiScale / 1.5)
+    readonly property real closeSize: Math.round((compact ? 20 : 24) * Theme.uiScale / 1.5)
+    readonly property real actionHeight: compact ? Math.round(22 * Theme.uiScale / 1.5) : Theme.menuRowHeight
 
     radius: Theme.radius
     color: Theme.panelBg
@@ -22,8 +24,10 @@ Rectangle {
     scale: hover.containsMouse ? 1.015 : 1.0
     transformOrigin: Item.Center
 
+    // Shrink-wrap to content — no artificial min height from layout stretch.
     implicitWidth: Math.round(360 * Theme.uiScale / 1.5)
     implicitHeight: content.implicitHeight + cardPad * 2
+    height: implicitHeight
 
     Behavior on scale {
         NumberAnimation {
@@ -69,48 +73,59 @@ Rectangle {
         x: root.cardPad
         y: root.cardPad
         width: parent.width - root.cardPad * 2
-        spacing: Theme.menuPad / 2
+        spacing: Math.max(2, Math.round(root.cardPad * 0.4))
 
         RowLayout {
             width: parent.width
             spacing: Theme.menuIconGap
+            // Keep the row as tall as its children — no stretch floor.
+            implicitHeight: Math.max(root.iconSize, textCol.implicitHeight, root.closeSize)
 
             ResolvedIcon {
                 Layout.preferredWidth: root.iconSize
                 Layout.preferredHeight: root.iconSize
+                Layout.maximumWidth: root.iconSize
+                Layout.maximumHeight: root.iconSize
                 Layout.alignment: Qt.AlignTop
                 implicitSize: root.iconSize
                 candidates: root.iconCandidates()
             }
 
             Column {
+                id: textCol
                 Layout.fillWidth: true
-                spacing: 2
+                Layout.alignment: Qt.AlignVCenter
+                spacing: 1
 
                 Text {
                     width: parent.width
-                    text: root.notification ? (root.notification.appName || "Notification") : ""
+                    visible: text.length > 0
+                    height: visible ? implicitHeight : 0
+                    text: root.notification ? (root.notification.appName || "") : ""
                     elide: Text.ElideRight
                     color: Theme.muted
                     font.family: Theme.fontFamily
-                    font.pointSize: Theme.menuFontPointSize * 0.85
+                    font.pointSize: Theme.menuFontPointSize * 0.8
                     font.bold: true
                 }
 
                 Text {
                     width: parent.width
+                    visible: text.length > 0
+                    height: visible ? implicitHeight : 0
                     text: root.notification ? (root.notification.summary || "") : ""
                     wrapMode: Text.Wrap
                     maximumLineCount: 2
                     elide: Text.ElideRight
                     color: Theme.text
                     font.family: Theme.fontFamily
-                    font.pointSize: Theme.menuFontPointSize
+                    font.pointSize: Theme.menuFontPointSize * (compact ? 0.95 : 1.0)
                     font.bold: true
                 }
 
                 Text {
                     visible: !!(root.notification && root.notification.body)
+                    height: visible ? implicitHeight : 0
                     width: parent.width
                     text: {
                         const b = root.notification ? (root.notification.body || "") : "";
@@ -122,15 +137,17 @@ Rectangle {
                     elide: Text.ElideRight
                     color: Theme.muted
                     font.family: Theme.fontFamily
-                    font.pointSize: Theme.menuFontPointSize * 0.9
+                    font.pointSize: Theme.menuFontPointSize * 0.85
                     font.bold: true
                 }
             }
 
             MouseArea {
                 id: closeBtn
-                Layout.preferredWidth: Theme.menuRowHeight
-                Layout.preferredHeight: Theme.menuRowHeight
+                Layout.preferredWidth: root.closeSize
+                Layout.preferredHeight: root.closeSize
+                Layout.maximumWidth: root.closeSize
+                Layout.maximumHeight: root.closeSize
                 Layout.alignment: Qt.AlignTop
                 cursorShape: Qt.PointingHandCursor
                 hoverEnabled: true
@@ -141,7 +158,7 @@ Rectangle {
                     text: "󰅖"
                     color: closeBtn.containsMouse ? Theme.text : Theme.muted
                     font.family: Theme.fontFamily
-                    font.pointSize: Theme.menuFontPointSize
+                    font.pointSize: Theme.menuFontPointSize * (compact ? 0.9 : 1.0)
                     font.bold: true
                     scale: closeBtn.pressed ? Theme.pressScale : (closeBtn.containsMouse ? Theme.hoverScale : 1.0)
 
@@ -163,8 +180,9 @@ Rectangle {
 
         Flow {
             visible: !!(root.notification && root.notification.actions && root.notification.actions.length)
+            height: visible ? implicitHeight : 0
             width: parent.width
-            spacing: Theme.menuPad / 2
+            spacing: Math.max(2, Math.round(root.cardPad * 0.4))
 
             Repeater {
                 model: root.notification ? (root.notification.actions || []) : []
@@ -172,8 +190,8 @@ Rectangle {
                 MouseArea {
                     id: act
                     required property var modelData
-                    implicitWidth: actLabel.implicitWidth + Theme.menuPad * 2
-                    implicitHeight: Theme.menuRowHeight
+                    implicitWidth: actLabel.implicitWidth + root.cardPad * 2
+                    implicitHeight: root.actionHeight
                     cursorShape: Qt.PointingHandCursor
                     hoverEnabled: true
                     onClicked: {
