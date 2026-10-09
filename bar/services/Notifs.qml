@@ -13,15 +13,6 @@ Item {
     // Live height of the open notification-center panel (0 when closed).
     property real centerPanelHeight: 0
 
-    // Notification action chrome variants — cycle with A while center is open.
-    readonly property var actionStyles: ["chips", "bleed", "links", "gap", "rail"]
-    property int actionStyleIndex: 0
-    readonly property string actionStyle: actionStyles[actionStyleIndex] || "chips"
-
-    function cycleActionStyle() {
-        root.actionStyleIndex = (root.actionStyleIndex + 1) % root.actionStyles.length;
-    }
-
     readonly property var notifications: server.trackedNotifications
     readonly property int count: {
         const vals = server.trackedNotifications ? (server.trackedNotifications.values || []) : [];

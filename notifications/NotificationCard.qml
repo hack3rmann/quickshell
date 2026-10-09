@@ -16,7 +16,6 @@ Rectangle {
     readonly property real closeSize: Math.round((compact ? 20 : 24) * Theme.uiScale / 1.5)
     readonly property real actionHeight: compact ? Math.round(22 * Theme.uiScale / 1.5) : Theme.menuRowHeight
     readonly property bool hasActions: !!(notification && notification.actions && notification.actions.length)
-    readonly property bool bleedActions: hasActions && Notifs.actionStyle === "bleed"
 
     radius: Theme.radius
     color: Theme.panelBg
@@ -26,9 +25,8 @@ Rectangle {
     scale: hover.containsMouse ? 1.015 : 1.0
     transformOrigin: Item.Center
 
-    // Shrink-wrap; bleed style eats the bottom pad into the strip.
     implicitWidth: Math.round(360 * Theme.uiScale / 1.5)
-    implicitHeight: mainCol.implicitHeight + (root.bleedActions ? root.cardPad : root.cardPad * 2) + (root.bleedActions ? bleedActions.implicitHeight : 0)
+    implicitHeight: content.implicitHeight + cardPad * 2
     height: implicitHeight
 
     Behavior on scale {
@@ -71,7 +69,7 @@ Rectangle {
     }
 
     Column {
-        id: mainCol
+        id: content
         x: root.cardPad
         y: root.cardPad
         width: parent.width - root.cardPad * 2
@@ -180,27 +178,13 @@ Rectangle {
         }
 
         NotificationActions {
-            visible: root.hasActions && !root.bleedActions
+            visible: root.hasActions
             width: parent.width
             height: visible ? implicitHeight : 0
             notification: root.notification
             cardPad: root.cardPad
             actionHeight: root.actionHeight
-            style: Notifs.actionStyle
             onInvoked: root.closeRequested()
         }
-    }
-
-    NotificationActions {
-        id: bleedActions
-        visible: root.bleedActions
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        notification: root.notification
-        cardPad: root.cardPad
-        actionHeight: root.actionHeight
-        style: "bleed"
-        onInvoked: root.closeRequested()
     }
 }
