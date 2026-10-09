@@ -4,7 +4,7 @@ import qs.bar
 
 MouseArea {
     id: root
-    implicitWidth: label.implicitWidth + Theme.modulePadH * 2
+    implicitWidth: label.implicitWidth + Theme.modulePadH
     implicitHeight: Theme.barHeight
     cursorShape: Qt.PointingHandCursor
     hoverEnabled: true

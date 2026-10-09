@@ -361,6 +361,46 @@ PopupWindow {
                 }
             }
 
+            // Scanning indicator
+            Item {
+                id: scanDots
+                visible: !!(root.adapter && root.adapter.discovering)
+                width: parent.width
+                height: visible ? Theme.menuRowHeight * 0.7 : 0
+
+                property int phase: 0
+
+                Timer {
+                    running: scanDots.visible
+                    interval: 320
+                    repeat: true
+                    onTriggered: scanDots.phase = (scanDots.phase + 1) % 3
+                }
+
+                Row {
+                    anchors.centerIn: parent
+                    spacing: Math.max(4, Theme.menuPad / 2)
+
+                    Repeater {
+                        model: 3
+                        Rectangle {
+                            required property int index
+                            width: Math.max(4, Math.round(Theme.menuPad * 0.45))
+                            height: width
+                            radius: width / 2
+                            color: Theme.text
+                            opacity: scanDots.phase === index ? 1.0 : 0.25
+
+                            Behavior on opacity {
+                                NumberAnimation {
+                                    duration: Theme.animFast
+                                    easing.type: Easing.OutCubic
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
