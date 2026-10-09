@@ -15,6 +15,7 @@ Rectangle {
     readonly property real iconSize: Math.round((compact ? 18 : 24) * Theme.uiScale / 1.5)
     readonly property real closeSize: Math.round((compact ? 20 : 24) * Theme.uiScale / 1.5)
     readonly property real actionHeight: compact ? Math.round(22 * Theme.uiScale / 1.5) : Theme.menuRowHeight
+    readonly property bool hasActions: !!(notification && notification.actions && notification.actions.length)
 
     radius: Theme.radius
     color: Theme.panelBg
@@ -178,8 +179,15 @@ Rectangle {
             }
         }
 
+        Rectangle {
+            visible: root.hasActions
+            height: visible ? 1 : 0
+            width: parent.width
+            color: Qt.rgba(1, 1, 1, 0.25)
+        }
+
         Flow {
-            visible: !!(root.notification && root.notification.actions && root.notification.actions.length)
+            visible: root.hasActions
             height: visible ? implicitHeight : 0
             width: parent.width
             spacing: Math.max(2, Math.round(root.cardPad * 0.4))

@@ -103,6 +103,18 @@ PanelWindow {
         onActivated: root.requestClose()
     }
 
+    Shortcut {
+        sequence: "D"
+        enabled: root.opened
+        onActivated: Notifs.toggleDnd()
+    }
+
+    Shortcut {
+        sequence: "C"
+        enabled: root.opened
+        onActivated: Notifs.clearAll()
+    }
+
     readonly property var notifList: {
         const raw = Notifs.notifications ? (Notifs.notifications.values || []) : [];
         const list = [];
